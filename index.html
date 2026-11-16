@@ -328,6 +328,10 @@ body[data-mode=attract] #attract{opacity:1;pointer-events:auto}
 .row input[type=text]{width:240px;text-align:left}
 .row input.w{flex:1;width:auto;min-width:0;text-align:left}
 .row select{text-align:left;width:auto}
+.row.slr{flex-wrap:wrap;row-gap:4px}
+.row.slr>label{flex:1 1 100%}
+.row.slr input[type=range]{flex:1;min-width:0;height:30px;accent-color:var(--pm25);cursor:pointer}
+.row.slr output{min-width:150px;text-align:right;font-size:14px;color:var(--ink2);font-variant-numeric:tabular-nums}
 .row input:focus,.row select:focus{box-shadow:0 0 0 2px var(--pm25)}
 .sw{position:relative;width:51px;height:31px;flex:none}
 .sw input{position:absolute;inset:0;opacity:0;cursor:pointer;z-index:1;margin:0}
@@ -586,6 +590,10 @@ pre.log{font:13px/1.5 ui-monospace,Consolas,monospace;white-space:pre-wrap;word-
     <div class="row"><span class="k">수동 조작<small>누르고 있는 동안만 움직입니다 (대기 상태에서만)</small></span>
      <select id="m_lvl" aria-label="수동 세기"><option value="1">세기 1</option><option value="2" selected>세기 2</option><option value="3">세기 3</option><option value="4">세기 4</option><option value="5">세기 5</option></select></div>
     <div class="btns"><button class="b hold" data-hold="u">올림 ▲</button><button class="b hold" data-hold="d">내림 ▼</button></div>
+   </div></div>
+   <div class="grp"><h4>속도 · 힘 <small class="cap">(압축할 때 쓰임. 제어부에 저장, 대기 상태에서만 바뀝니다)</small></h4><div class="card">
+    <div class="row slr"><label for="sl_P">속도<small>올림 · 원점 복귀 모두 이 속도. 너무 느리면 힘이 모자라 완료 전류에 못 닿고 시간 제한으로 멈출 수 있음</small></label><input type="range" id="sl_P" min="60" max="255" step="5"><output id="so_P">—</output><button class="b ghost" data-sl="P">적용</button></div>
+    <div class="row slr"><label for="sl_T">누르는 힘<small>이 전류에 닿으면 압축을 멈춤 (권장 1000 mA 이하). N 은 전류로 계산한 추정값 (가상 실험 기준)</small></label><input type="range" id="sl_T" min="300" max="1000" step="50"><output id="so_T">—</output><button class="b ghost" data-sl="T">적용</button></div>
    </div></div>
    <div class="grp"><h4>제어부 설정값 <small class="cap">(제어부 EEPROM에 저장, 대기 상태에서만 바뀝니다)</small></h4><div class="card">
     <div class="row"><label for="cf_T">압축 완료 전류 (mA)<small>권장 1000 이하 (구조해석 안전율 기준)</small></label><input type="number" id="cf_T" min="300" max="4000" step="50"><button class="b ghost" data-cf="T">적용</button></div>
@@ -1528,14 +1536,23 @@ function applySettings(k){document.documentElement.dataset.theme=S.theme==='ligh
 const CFG_KEYS={T:'full',O:'hold',W:'lock',P:'pwm',K:'stall',J:'hard',E:'end',M:'max',A:'low',L:'lo',U:'hi',R:'rev'};
 // 펌웨어(compactor 4)의 처음 값 — D 명령으로 돌아가는 값
 const CFG_DEF={full:2400,stall:3200,hard:4200,end:60,max:26,hold:2,lock:0,low:5,pwm:255,lo:1,hi:1,rev:1};
-function fillCfg(){if(!C.cfg)return;for(const [k,f] of Object.entries(CFG_KEYS)){const el=$('cf_'+k);if(el&&document.activeElement!==el&&C.cfg[f]!=null)el.value=C.cfg[f];}}
+const SL_KEYS={P:'pwm',T:'full'};
+function slShow(k,v){$('so_'+k).textContent=k==='P'?Math.round(v/255*100)+' % (PWM '+v+')':v+' mA · 약 '+Math.round(force(v))+' N'+(v>1000?' · 권장 초과':'');}
+// 손댄 칸(dirty)은 [적용] 전까지 제어부 값으로 덮어쓰지 않음
+function fillCfg(){if(!C.cfg)return;const keep=el=>!el||el.dataset.dirty||document.activeElement===el;
+ for(const [k,f] of Object.entries(CFG_KEYS)){const el=$('cf_'+k);if(!keep(el)&&C.cfg[f]!=null)el.value=C.cfg[f];}
+ for(const [k,f] of Object.entries(SL_KEYS)){const el=$('sl_'+k);if(!keep(el)&&C.cfg[f]!=null){el.value=C.cfg[f];slShow(k,C.cfg[f]);}}}
+document.addEventListener('input',e=>{const t=e.target;if(t.id&&/^(cf|sl)_/.test(t.id))t.dataset.dirty='1';});
 function cfgIdle(){if(C.st!==0&&C.st!==7){toast('대기 상태에서만 바꿀 수 있습니다','압축부가 멈춘 뒤 다시 누르세요.','bad',4000);return false;}return true;}
+for(const k of Object.keys(SL_KEYS))$('sl_'+k).oninput=()=>slShow(k,+$('sl_'+k).value);
+for(const b of $$('[data-sl]'))b.onclick=()=>applyCfg(b.dataset.sl,Math.round(+$('sl_'+b.dataset.sl).value));
 for(const b of $$('[data-cf]'))b.onclick=()=>{const k=b.dataset.cf,el=$('cf_'+k);if(el.value==='')return;let v=Math.round(+el.value);if(!isFinite(v))return;
- if(el.min!==undefined&&el.min!==''&&v<+el.min)v=+el.min;if(el.max!==undefined&&el.max!==''&&v>+el.max)v=+el.max;el.value=v;
+ if(el.min!==undefined&&el.min!==''&&v<+el.min)v=+el.min;if(el.max!==undefined&&el.max!==''&&v>+el.max)v=+el.max;el.value=v;applyCfg(k,v);};
+function applyCfg(k,v){if(!isFinite(v))return;
  if(!cfgIdle())return;const cf=C.cfg||{};
  if(k==='T'&&v>1000&&!confirm('압축 완료 전류 '+v+' mA 는 권장값 1000 mA 를 넘습니다 (구조해석 안전율 기준).\n그래도 적용할까요?'))return;
  if(k==='R'&&!confirm('모터 방향을 바꾸면 올림과 내림이 서로 바뀝니다.\n리프트 주변을 비우고, 바꾼 뒤 수동 조작으로 방향을 먼저 확인하세요.\n바꿀까요?'))return;
- if(send(k+v))evt('setting','제어부 '+k+v);
+ if(send(k+v)){evt('setting','제어부 '+k+v);for(const el of [$('cf_'+k),$('sl_'+k)])if(el)delete el.dataset.dirty;}
  if(k==='K'&&cf.hard&&v>=cf.hard)toast('과전류 정지가 즉시 정지보다 큽니다','제어부는 즉시 정지 값('+cf.hard+' mA)을 과전류 기준으로 씁니다.','bad',5000);
  if(k==='J'&&cf.stall&&v<=cf.stall)toast('즉시 정지가 과전류 정지보다 작습니다','과전류 정지('+cf.stall+' mA)보다 크게 두세요.','bad',5000);};
 $('cf_D').onclick=()=>{if(!cfgIdle())return;if(!confirm('제어부 설정을 모두 펌웨어 처음 값으로 되돌릴까요?\n압축 완료 전류가 2400 mA 가 되니 바로 다시 맞춰야 합니다.'))return;if(send('D'))evt('setting','제어부 처음 값으로 (D)');};
