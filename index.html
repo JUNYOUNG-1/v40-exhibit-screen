@@ -285,6 +285,11 @@ body[data-mode=attract] #attract{opacity:1;pointer-events:auto}
 .alert b{font-size:18px}
 .alert p{font-size:14px;color:var(--ink2)}
 
+/* 관리자 버튼: 오른쪽 아래 구석의 흐린 점 */
+#adm{position:fixed;right:0;bottom:0;z-index:7;width:40px;height:40px;border:0;padding:0;background:none;cursor:default;display:grid;place-items:center;opacity:.22;transition:opacity .3s}
+#adm::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--ink3)}
+#adm:hover{opacity:.7}
+#adm:focus-visible{opacity:.9;outline:2px solid var(--pm25);outline-offset:-6px;border-radius:12px}
 /* modal: PIN */
 .modal{position:fixed;inset:0;z-index:20;display:grid;place-items:center;background:rgba(0,0,0,.35);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
 .pinbox{width:min(360px,92vw);padding:30px 28px 22px;border-radius:32px;text-align:center}
@@ -536,9 +541,10 @@ pre.log{font:13px/1.5 ui-monospace,Consolas,monospace;white-space:pre-wrap;word-
 
 <div class="alert" id="alert" role="alert" hidden><span class="ic">!</span><div><b>안전을 위해 멈췄습니다</b><p data-k="faultTxt"></p><p class="oponly">관리자 화면의 [오류 해제]를 누르거나 본체 버튼을 3초 동안 누르세요.</p></div></div>
 
+<button id="adm" aria-label="관리자"></button>
 <div class="modal" id="pin" hidden>
  <div class="pinbox panel strong" role="dialog" aria-modal="true" aria-labelledby="pin_t">
-  <h3 id="pin_t">운영자 확인</h3><p>운영자 PIN을 입력하세요</p>
+  <h3 id="pin_t">관리자</h3><p>비밀번호를 입력하세요</p>
   <div class="pdots" id="pdots"></div>
   <div class="keys" id="keys"></div>
  </div>
@@ -587,6 +593,17 @@ pre.log{font:13px/1.5 ui-monospace,Consolas,monospace;white-space:pre-wrap;word-
     <div class="row"><label for="cf_W">재압축 금지 (초)<small>설계 듀티 10 % 는 300</small></label><input type="number" id="cf_W" min="0" max="1800"><button class="b ghost" data-cf="W">적용</button></div>
     <div class="row"><label for="cf_P">자동 PWM (60–255)</label><input type="number" id="cf_P" min="60" max="255"><button class="b ghost" data-cf="P">적용</button></div>
    </div></div>
+   <div class="grp"><h4>제어부 안전 · 동작 설정 <small class="cap">(제어부 EEPROM에 저장, 대기 상태에서만 바뀝니다. 잘 모르면 그대로 둘 것)</small></h4><div class="card">
+    <div class="row"><label for="cf_K">과전류 정지 (mA)<small>이 전류가 0.06초 이어지면 멈추고 오류. 올림 처음 저각 구간에는 1.5배까지 봐줌</small></label><input type="number" id="cf_K" min="500" max="4500" step="50"><button class="b ghost" data-cf="K">적용</button></div>
+    <div class="row"><label for="cf_J">즉시 정지 (mA)<small>넘는 순간 바로 멈추고 오류. 과전류 정지보다 크게 둘 것</small></label><input type="number" id="cf_J" min="800" max="5000" step="50"><button class="b ghost" data-cf="J">적용</button></div>
+    <div class="row"><label for="cf_E">끝 전류 (mA)<small>전류가 이보다 작게 0.4초 이어지면 액추에이터 끝에 닿은 것으로 보고 멈춤</small></label><input type="number" id="cf_E" min="10" max="500" step="5"><button class="b ghost" data-cf="E">적용</button></div>
+    <div class="row"><label for="cf_M">한 방향 최대 (초)<small>올림이나 내림 한 번이 이 시간을 넘으면 멈춤</small></label><input type="number" id="cf_M" min="3" max="60"><button class="b ghost" data-cf="M">적용</button></div>
+    <div class="row"><label for="cf_A">저각 구간 (초)<small>올림을 시작하고 이 시간 동안은 기동 전류가 커서 압축 완료로 보지 않음</small></label><input type="number" id="cf_A" min="0" max="20"><button class="b ghost" data-cf="A">적용</button></div>
+    <div class="row"><label for="cf_L">하한 리밋 스위치</label><select id="cf_L"><option value="1">씀</option><option value="0">안 씀</option></select><button class="b ghost" data-cf="L">적용</button></div>
+    <div class="row"><label for="cf_U">상한 리밋 스위치<small>스위치가 없거나 고장이면 안 씀 → 끝 전류로 끝을 앎</small></label><select id="cf_U"><option value="1">씀</option><option value="0">안 씀</option></select><button class="b ghost" data-cf="U">적용</button></div>
+    <div class="row"><label for="cf_R">모터 방향 뒤집기<small>처음 값은 켬(이 기판 배선 기준). 올림 · 내림이 거꾸로 움직일 때만 바꿈</small></label><select id="cf_R"><option value="1">켬</option><option value="0">끔</option></select><button class="b ghost" data-cf="R">적용</button></div>
+    <div class="row"><span class="k">모든 설정을 펌웨어 처음 값으로<small>압축 완료 전류도 2400 mA 로 돌아가니 바로 다시 맞출 것</small></span><button class="b ghost" id="cf_D">처음 값으로</button></div>
+   </div></div>
    <div class="grp"><h4>실험 로거</h4><div class="card">
     <div class="btns"><button class="b" data-lcmd="T">무게 영점</button><button class="b ghost" data-lcmd="M">마커 +1</button><button class="b ghost" data-lcmd="S">센서 상태 확인</button></div>
    </div></div>
@@ -621,7 +638,7 @@ pre.log{font:13px/1.5 ui-monospace,Consolas,monospace;white-space:pre-wrap;word-
    </div></div>
    <div class="grp"><h4>운영자 잠금</h4><div class="card">
     <div class="row"><label for="s_autoLockMin">손대지 않으면 자동 잠금 (분)</label><input type="number" id="s_autoLockMin" data-s="autoLockMin" min="1" max="240"></div>
-    <div class="row"><label for="pin_new">새 PIN (4–8자리 숫자)</label><input type="password" id="pin_new" inputmode="numeric" maxlength="8" autocomplete="off"><button class="b ghost" id="pin_save">바꾸기</button></div>
+    <div class="row"><label for="pin_new">관리자 비밀번호 바꾸기 (숫자 4–8자리)</label><input type="password" id="pin_new" inputmode="numeric" maxlength="8" autocomplete="off"><button class="b ghost" id="pin_save">바꾸기</button></div>
    </div></div>
   </div>
 
@@ -691,7 +708,7 @@ const CSSC=new Map();
 const css=k=>{let v=CSSC.get(k);if(v===undefined){v=getComputedStyle(document.documentElement).getPropertyValue(k).trim();CSSC.set(k,v);}return v;};
 
 // ───────── 설정
-const DEF={pin:'4040',title:'분진 비산 저감을 위한 모듈 적층식 압축 문서세단기',sub:'',
+const DEF={pin:'0000',title:'분진 비산 저감을 위한 모듈 적층식 압축 문서세단기',sub:'',
  theme:'light',glass:true,lite:false,burnin:true,hideCursor:true,sound:true,
  attractMin:3,sceneSec:9,qr:true,autoLockMin:10,
  simCtrl:false,simLog:false,simAutoSec:70,autoDemo:false,autoDemoMin:10,record:true,
@@ -703,7 +720,7 @@ const DEF={pin:'4040',title:'분진 비산 저감을 위한 모듈 적층식 압
 // 예전 기본 문구가 저장돼 있으면 새 기본값으로 바꿈 (직접 고친 문구는 그대로)
 const OLDTXT={sub:'v40 · 2026 캡스톤 디자인',refLabel:'기존 세단 방식 최고치 (가상 실험)',resultNote:'가상 실험값입니다 (실측 아님)'},
  OLDRES=[['세단할 때 PM10 최고 증가량 감소','기존 방식 대비'],['가득 채운 통의 실효 압축비','눌렀다 풀고 30초 뒤'],['압축 한 번 왕복 시간','올림, 유지, 내림']];
-function migTxt(o){if(!o.themeV2){o.theme='light';o.themeV2=1;}for(const k in OLDTXT)if(o[k]===OLDTXT[k])o[k]=DEF[k];if(Array.isArray(o.results))o.results.forEach((r,i)=>{const d=OLDRES[i];if(r&&d){if(r.t===d[0])r.t=DEF.results[i].t;if(r.s===d[1])r.s=DEF.results[i].s;}});return o;}
+function migTxt(o){if(!o.themeV2){o.theme='light';o.themeV2=1;}if(!o.pinV2){if(String(o.pin)==='4040')o.pin='0000';o.pinV2=1;}for(const k in OLDTXT)if(o[k]===OLDTXT[k])o[k]=DEF[k];if(Array.isArray(o.results))o.results.forEach((r,i)=>{const d=OLDRES[i];if(r&&d){if(r.t===d[0])r.t=DEF.results[i].t;if(r.s===d[1])r.s=DEF.results[i].s;}});return o;}
 const clone=o=>JSON.parse(JSON.stringify(o));
 let S=clone(DEF);
 try{const j=JSON.parse(localStorage.getItem('v40ex_settings')||'{}');Object.assign(S,j);}catch(e){}
@@ -903,6 +920,7 @@ const SIM={timer:null,n:0,
  halt(why){const c=this.c;this.out('$E why='+why+' t='+(Date.now()-c.t0)+' pk='+Math.round(c.pk)+' vmin=4810');c.d=0;},
  go(s){this.c.st=s;this.c.tSt=Date.now();this.out('$P st='+s);},
  cmd(s){const c=this.c,now=Date.now();
+  if(s==='D'){if(c.st===0||c.st===7)Object.assign(c.cfg,CFG_DEF);this.cfgLine();return;}
   if(/^[A-Z]/.test(s)){const k=s[0],v=+s.slice(1),m={T:'full',K:'stall',J:'hard',E:'end',M:'max',O:'hold',W:'lock',A:'low',P:'pwm',L:'lo',U:'hi',R:'rev'};if(m[k]&&s.length>1&&(c.st===0||c.st===7))c.cfg[m[k]]=v;this.cfgLine();return;}
   for(const ch of s){
    if(ch==='a'&&c.st===0){if(c.cfg.lock&&c.lastDone&&now-c.lastDone<c.cfg.lock*1000){this.out('$E why=lock t='+Math.ceil((c.cfg.lock*1000-(now-c.lastDone))/1000)+' pk=0 vmin=0');continue;}
@@ -1492,6 +1510,7 @@ $('op_lock').onclick=lock;$('op_admin').onclick=()=>openAdmin();
 
 // ───────── 관리자
 let adminTab='dev',logDirty=true;
+$('adm').onclick=()=>{OP.on?openAdmin():askPin(openAdmin);};
 function openAdmin(){if(!OP.on){askPin(openAdmin);return;}$('admin').hidden=false;fillInputs();devPanel();renderStats();if(adminTab==='rec')loadFiles();}
 $('ad_close').onclick=()=>{$('admin').hidden=true;};
 for(const b of $$('#ad_tabs button'))b.onclick=()=>{adminTab=b.dataset.t;for(const x of $$('#ad_tabs button'))x.classList.toggle('on',x===b);for(const p of $$('.tp'))p.classList.toggle('on',p.id==='tp_'+adminTab);if(adminTab==='rec'){renderStats();loadFiles();}if(adminTab==='log'){logDirty=true;renderLog();}};
@@ -1506,9 +1525,20 @@ function applySettings(k){document.documentElement.dataset.theme=S.theme==='ligh
  for(const w of $$('[data-win]'))w.textContent='최근 '+winLab(S[w.dataset.win]);
  if(!S.burnin)$('stage').style.transform='';$('rec_name').textContent=simPrefix()+'전시_'+ymd(new Date())+'.csv';chips();
  if(!k||k==='glass'||k==='lite'||k==='theme')GL.cfg();}
-const CFG_KEYS={T:'full',O:'hold',W:'lock',P:'pwm'};
-function fillCfg(){if(!C.cfg)return;for(const [k,f] of Object.entries(CFG_KEYS)){const el=$('cf_'+k);if(el&&document.activeElement!==el)el.value=C.cfg[f];}}
-for(const b of $$('[data-cf]'))b.onclick=()=>{const k=b.dataset.cf,v=Math.round(+$('cf_'+k).value);if(!isFinite(v))return;if(C.st!==0&&C.st!==7){toast('대기 상태에서만 바꿀 수 있습니다','압축부가 멈춘 뒤 다시 누르세요.','bad',4000);return;}if(send(k+v))evt('setting','제어부 '+k+v);};
+const CFG_KEYS={T:'full',O:'hold',W:'lock',P:'pwm',K:'stall',J:'hard',E:'end',M:'max',A:'low',L:'lo',U:'hi',R:'rev'};
+// 펌웨어(compactor 4)의 처음 값 — D 명령으로 돌아가는 값
+const CFG_DEF={full:2400,stall:3200,hard:4200,end:60,max:26,hold:2,lock:0,low:5,pwm:255,lo:1,hi:1,rev:1};
+function fillCfg(){if(!C.cfg)return;for(const [k,f] of Object.entries(CFG_KEYS)){const el=$('cf_'+k);if(el&&document.activeElement!==el&&C.cfg[f]!=null)el.value=C.cfg[f];}}
+function cfgIdle(){if(C.st!==0&&C.st!==7){toast('대기 상태에서만 바꿀 수 있습니다','압축부가 멈춘 뒤 다시 누르세요.','bad',4000);return false;}return true;}
+for(const b of $$('[data-cf]'))b.onclick=()=>{const k=b.dataset.cf,el=$('cf_'+k);if(el.value==='')return;let v=Math.round(+el.value);if(!isFinite(v))return;
+ if(el.min!==undefined&&el.min!==''&&v<+el.min)v=+el.min;if(el.max!==undefined&&el.max!==''&&v>+el.max)v=+el.max;el.value=v;
+ if(!cfgIdle())return;const cf=C.cfg||{};
+ if(k==='T'&&v>1000&&!confirm('압축 완료 전류 '+v+' mA 는 권장값 1000 mA 를 넘습니다 (구조해석 안전율 기준).\n그래도 적용할까요?'))return;
+ if(k==='R'&&!confirm('모터 방향을 바꾸면 올림과 내림이 서로 바뀝니다.\n리프트 주변을 비우고, 바꾼 뒤 수동 조작으로 방향을 먼저 확인하세요.\n바꿀까요?'))return;
+ if(send(k+v))evt('setting','제어부 '+k+v);
+ if(k==='K'&&cf.hard&&v>=cf.hard)toast('과전류 정지가 즉시 정지보다 큽니다','제어부는 즉시 정지 값('+cf.hard+' mA)을 과전류 기준으로 씁니다.','bad',5000);
+ if(k==='J'&&cf.stall&&v<=cf.stall)toast('즉시 정지가 과전류 정지보다 작습니다','과전류 정지('+cf.stall+' mA)보다 크게 두세요.','bad',5000);};
+$('cf_D').onclick=()=>{if(!cfgIdle())return;if(!confirm('제어부 설정을 모두 펌웨어 처음 값으로 되돌릴까요?\n압축 완료 전류가 2400 mA 가 되니 바로 다시 맞춰야 합니다.'))return;if(send('D'))evt('setting','제어부 처음 값으로 (D)');};
 document.addEventListener('click',e=>{const b=e.target.closest('[data-cmd]');if(!b)return;const c=b.dataset.cmd;
  if(c==='a'&&ctrlFresh()&&C.st!==0){toast('지금은 시작할 수 없습니다',C.st===7?'안전 정지를 먼저 해제하세요.':'압축부가 움직이는 중입니다.','bad',4000);return;}
  if(send(c)&&c!=='?')evt('cmd',({a:'압축 한 번',s:'정지',h:'원점 복귀',x:'오류 해제',z:'전류 영점',b:'LED·부저 시험'})[c]||c);});
@@ -1524,14 +1554,14 @@ $('l_disc').onclick=async()=>{if(DL.ok)await DL.close();DL.port=null;chips();dev
 $('fs_btn').onclick=()=>{document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen().catch(()=>{});};
 $('go_attract').onclick=()=>{$('admin').hidden=true;setMode('attract');};
 $('reload_btn').onclick=()=>location.reload();
-$('pin_save').onclick=()=>{const v=$('pin_new').value.trim();if(!/^\d{4,8}$/.test(v)){toast('PIN은 숫자 4–8자리입니다','','bad',3000);return;}S.pin=v;saveSettings();$('pin_new').value='';toast('PIN을 바꿨습니다','다음 잠금 해제부터 새 PIN을 쓰세요.','',4000);evt('op','PIN 변경');};
+$('pin_save').onclick=()=>{const v=$('pin_new').value.trim();if(!/^\d{4,8}$/.test(v)){toast('비밀번호는 숫자 4–8자리입니다','','bad',3000);return;}S.pin=v;saveSettings();$('pin_new').value='';toast('비밀번호를 바꿨습니다','다음에 들어올 때부터 새 비밀번호를 쓰세요.','',4000);evt('op','비밀번호 변경');};
 $('st_reset').onclick=()=>{if(!confirm('오늘 압축 횟수와 통계를 0으로 되돌릴까요? (누적 기록과 CSV 파일은 그대로)'))return;SX().today=ST0();saveStats();renderStats();evt('stats','오늘 통계 초기화');};
 $('fl_ref').onclick=loadFiles;$('lg_f').onchange=()=>{logDirty=true;renderLog();};$('lg_clr').onclick=()=>{LOG.length=0;logDirty=true;renderLog();};
 function devPanel(){if($('admin').hidden)return;
  $('noserial').hidden=hasSerial;
  $('dv_c').innerHTML=S.simCtrl?'<span class="warnt">시뮬레이션 사용 중 (실제 장치 값은 무시)</span>':DC.ok?'<span class="okt">연결됨</span>'+(C.id?' · '+esc(C.id):'')+(ctrlFresh()?'':' <span class="warnt">· 상태 신호 없음</span>'):'연결 안 됨';
  $('dv_cz').innerHTML=C.zero?(C.zero.ok?'<span class="okt">'+(C.zero.mv/1000).toFixed(2)+' V 정상</span>':'<span class="badt">'+(C.zero.mv/1000).toFixed(2)+' V 이상</span>'):'—';
- $('dv_ccfg').textContent=C.cfg?'완료 전류 '+C.cfg.full+' mA, 과전류 '+C.cfg.stall+' mA, 유지 '+C.cfg.hold+' s, 재압축 금지 '+C.cfg.lock+' s, PWM '+C.cfg.pwm+', 하한 스위치 '+(C.cfg.lo?'씀':'안 씀')+', 상한 스위치 '+(C.cfg.hi?'씀':'안 씀'):'—';
+ $('dv_ccfg').textContent=C.cfg?'완료 전류 '+C.cfg.full+' mA, 과전류 '+C.cfg.stall+' mA, 즉시 정지 '+C.cfg.hard+' mA, 끝 전류 '+C.cfg.end+' mA, 한 방향 최대 '+C.cfg.max+' s, 저각 '+C.cfg.low+' s, 유지 '+C.cfg.hold+' s, 재압축 금지 '+C.cfg.lock+' s, PWM '+C.cfg.pwm+', 하한 스위치 '+(C.cfg.lo?'씀':'안 씀')+', 상한 스위치 '+(C.cfg.hi?'씀':'안 씀')+', 방향 뒤집기 '+(C.cfg.rev?'켬':'끔'):'—';
  $('dv_l').innerHTML=S.simLog?'<span class="warnt">시뮬레이션 사용 중 (실제 장치 값은 무시)</span>':DL.ok?'<span class="okt">연결됨</span>'+(logFresh()?'':' <span class="warnt">· 측정 줄 없음</span>'):'연결 안 됨';
  $('dv_ls').textContent=L.sens||(logFresh()?(L.w==null?'로드셀 응답 없음':'로드셀 정상')+', '+(L.pm25===0&&L.pm10===0?'먼지 값 0 (센서 신호 확인)':'먼지 센서 정상'):'—');
  $('dv_lscale').textContent=L.scale!=null?'보정값 '+L.scale:'';
