@@ -44,6 +44,8 @@ body,h1,h2,h3,p,li,span,b{word-break:keep-all;overflow-wrap:anywhere}
 b,strong{font-weight:600}
 .num,[data-n]{font-variant-numeric:tabular-nums}
 [hidden]{display:none!important}
+#blank{position:fixed;inset:0;z-index:30;background:#000;opacity:0;transition:opacity .35s ease;cursor:none}#blank.on{opacity:1;transition-duration:1.6s}
+.row.cam canvas{width:128px;height:96px;flex:none;border-radius:10px;background:#000;image-rendering:pixelated;transform:scaleX(-1)}
 
 #env{position:fixed;inset:0;width:100vw;height:100vh;z-index:0;display:block}
 #stage{position:fixed;inset:0;z-index:1;display:grid;grid-template-rows:auto 1fr auto;gap:18px;padding:20px 28px 22px;transition:transform 6s ease}
@@ -545,6 +547,7 @@ pre.log{font:13px/1.5 ui-monospace,Consolas,monospace;white-space:pre-wrap;word-
 
 <div class="alert" id="alert" role="alert" hidden><span class="ic">!</span><div><b>안전을 위해 멈췄습니다</b><p data-k="faultTxt"></p><p class="oponly">관리자 화면의 [오류 해제]를 누르거나 본체 버튼을 3초 동안 누르세요.</p></div></div>
 
+<div id="blank" hidden></div>
 <button id="adm" aria-label="관리자"></button>
 <div class="modal" id="pin" hidden>
  <div class="pinbox panel strong" role="dialog" aria-modal="true" aria-labelledby="pin_t">
@@ -649,6 +652,13 @@ pre.log{font:13px/1.5 ui-monospace,Consolas,monospace;white-space:pre-wrap;word-
     <div class="row"><label for="s_hideCursor">마우스 커서 숨기기</label><span class="sw"><input type="checkbox" id="s_hideCursor" data-s="hideCursor"><i></i></span></div>
     <div class="row"><label for="s_sound">소리<small>압축이 끝나면 짧은 알림음, 안전 정지는 경고음</small></label><span class="sw"><input type="checkbox" id="s_sound" data-s="sound"><i></i></span></div>
     <div class="btns"><button class="b ghost" id="fs_btn">전체 화면</button><button class="b ghost" id="go_attract">소개 화면 바로 보기</button><button class="b ghost" id="reload_btn">페이지 새로 고침</button></div>
+   </div></div>
+   <div class="grp"><h4>카메라로 화면 끄기 <small class="cap">(영상은 저장하거나 보내지 않고, 화면이 얼마나 바뀌었는지만 계산함)</small></h4><div class="card">
+    <div class="row"><label for="s_cam">쓰기<small>움직임이 없으면 화면을 검게 덮고, 사람이 움직이면 바로 다시 보여 줍니다. 처음 켤 때 카메라 허용을 한 번 눌러야 합니다</small><small class="warnt" id="cam_st"></small></label><span class="sw"><input type="checkbox" id="s_cam" data-s="cam"><i></i></span></div>
+    <div class="row"><label for="s_camMin">움직임이 없으면 끄기 (분)<small>압축하는 동안과 끝난 뒤 1분은 끄지 않습니다</small></label><input type="number" id="s_camMin" data-s="camMin" min="1" max="120"></div>
+    <div class="row"><label for="s_camSens">민감도<small>사람이 와도 안 켜지면 높이고, 아무도 없는데 자꾸 켜지면 낮추세요</small></label><select id="s_camSens" data-s="camSens"><option value="low">낮음</option><option value="mid">보통</option><option value="high">높음</option></select></div>
+    <div class="row cam"><canvas id="cam_cv" width="64" height="48"></canvas><span class="k">지금 움직임<small id="cam_lv">—</small></span></div>
+    <div class="btns"><button class="b ghost" id="cam_test">지금 화면 끄기</button></div>
    </div></div>
    <div class="grp"><h4>운영자 잠금</h4><div class="card">
     <div class="row"><label for="s_autoLockMin">손대지 않으면 자동 잠금 (분)</label><input type="number" id="s_autoLockMin" data-s="autoLockMin" min="1" max="240"></div>
@@ -806,7 +816,7 @@ const css=k=>{let v=CSSC.get(k);if(v===undefined){v=getComputedStyle(document.do
 // ───────── 설정
 const DEF={pin:'0000',title:'분진 비산 저감을 위한 모듈 적층식 압축 문서세단기',sub:'',
  theme:'light',glass:true,lite:false,burnin:true,hideCursor:true,sound:true,
- attractMin:3,sceneSec:9,qr:true,autoLockMin:10,
+ attractMin:3,sceneSec:9,qr:true,autoLockMin:10,cam:false,camMin:10,camSens:'mid',
  simCtrl:false,simLog:false,simAutoSec:70,autoDemo:false,autoDemoMin:10,record:true,
  vbus:12,fa:247,fb:-60.8,loadMode:'weight',panel2:'cr',upEmpty:16,guard:true,guardKg:18,
  aq25:[15,35,75],aq10:[30,80,150],refOn:true,refDelta:111,refLabel:'기존 방식 최고 (가상 실험)',
@@ -1747,6 +1757,62 @@ addEventListener('wheel',()=>{lastInteract=Date.now();},{passive:true});
 let wake=null;async function keepAwake(){try{if('wakeLock' in navigator&&document.visibilityState==='visible'){wake=await navigator.wakeLock.request('screen');}}catch(e){}}
 document.addEventListener('visibilitychange',keepAwake);
 
+// ───────── 카메라로 화면 끄기: 64×48 흑백으로 줄여 앞 장면과 비교, 바뀐 칸의 비율만 셈 (영상은 저장 · 전송 안 함)
+const CAM={stream:null,v:null,cv:null,cx:null,px:null,prev:null,mask:null,busy:false,ok:false,st:'',lastErr:'',retryT:-1e12,retryMs:3e4,lastF:0,lastCT:-1,
+ lastMotion:Date.now(),lastTick:Date.now(),lv:0,hits:0,blank:false,dark:false,darkT:0,testT:0,want:false,W:64,H:48,
+ need(){return {low:.03,mid:.012,high:.005}[S.camSens]||.012;},
+ mins(){return Math.max(1,+S.camMin||10);},
+ last(){return Math.max(this.lastMotion,lastInteract,lastCycleEnd+60000);},
+ async start(){if(this.busy||this.stream)return;
+  const md=navigator.mediaDevices;if(!md||!md.getUserMedia){this.fail('이 주소에서는 카메라를 못 씁니다 (크롬 · 엣지로 localhost 나 https 주소를 여세요)',3e5);return;}
+  this.busy=true;this.st='카메라 켜는 중…';
+  try{const s=await md.getUserMedia({video:{width:{ideal:320},height:{ideal:240},frameRate:{ideal:10,max:15}},audio:false});
+   if(!S.cam){for(const t of s.getTracks())t.stop();this.st='';return;}
+   this.stream=s;const v=this.v||(this.v=document.createElement('video'));v.muted=true;v.playsInline=true;v.srcObject=s;await v.play();
+   for(const t of s.getVideoTracks())t.addEventListener('ended',()=>{if(this.stream===s)this.fail('카메라 연결이 끊겼습니다',3e4);});
+   this.prev=null;this.hits=0;this.lastF=Date.now();this.lastCT=-1;this.lastMotion=Date.now();this.ok=true;this.st='';this.lastErr='';evt('cam','카메라 켬 (움직임으로 화면 끄고 켜기)');}
+  catch(e){const n=e&&e.name;
+   this.fail(n==='NotAllowedError'||n==='SecurityError'?'카메라 사용이 막혀 있습니다. 주소창 왼쪽 아이콘에서 카메라를 허용하세요':n==='NotFoundError'||n==='OverconstrainedError'?'카메라를 찾지 못했습니다':n==='NotReadableError'?'다른 프로그램(화상회의 앱 등)이 카메라를 쓰고 있습니다':'카메라 오류: '+(e&&e.message||e),n==='NotAllowedError'?3e5:3e4);}
+  finally{this.busy=false;}},
+ stop(){if(this.stream)for(const t of this.stream.getTracks())t.stop();this.stream=null;this.ok=false;if(this.v)this.v.srcObject=null;this.prev=null;this.lv=0;},
+ fail(m,ms){this.stop();this.st=m;this.retryMs=ms||3e4;this.retryT=Date.now();if(m!==this.lastErr){this.lastErr=m;evt('cam','카메라 안 됨: '+m);}},
+ sleep(why){if(this.blank)return;this.blank=true;const b=$('blank');b.hidden=false;void b.offsetWidth;b.classList.add('on');clearTimeout(this.darkT);this.darkT=setTimeout(()=>{if(this.blank)this.dark=true;},1800);evt('screen','화면 끔: '+why);},
+ wake(why){if(!this.blank)return;this.blank=false;this.dark=false;this.testT=0;clearTimeout(this.darkT);const b=$('blank');b.classList.remove('on');setTimeout(()=>{if(!this.blank)b.hidden=true;},450);evt('screen','화면 켬: '+why);},
+ diff(){const v=this.v,W=this.W,H=this.H,N=W*H;
+  if(!this.cx){this.cv=document.createElement('canvas');this.cv.width=W;this.cv.height=H;this.cx=this.cv.getContext('2d',{willReadFrequently:true});this.cx.imageSmoothingQuality='high';this.mask=new Uint8Array(N);}
+  this.cx.drawImage(v,0,0,W,H);const d=this.cx.getImageData(0,0,W,H).data,g=new Uint8Array(N);
+  for(let i=0,j=0;i<N;i++,j+=4)g[i]=(d[j]*77+d[j+1]*150+d[j+2]*29)>>8;
+  const p=this.prev;this.prev=g;if(!p)return 0;
+  let m=0;for(let i=0;i<N;i++)m+=g[i]-p[i];m/=N; // 화면 전체가 같이 밝아지고 어두워지는 것(자동 노출)은 뺌
+  let n=0;const mk=this.mask;for(let i=0;i<N;i++){const on=Math.abs(g[i]-p[i]-m)>18?1:0;mk[i]=on;n+=on;}
+  return n/N;},
+ preview(){const c=$('cam_cv');if(!c||!this.prev)return;const x=this.px||(this.px=c.getContext('2d')),W=this.W,H=this.H,im=x.createImageData(W,H),g=this.prev,mk=this.mask,a=im.data;
+  for(let i=0,j=0;i<W*H;i++,j+=4){const y=g[i]*.75;a[j]=mk[i]?255:y;a[j+1]=mk[i]?70:y;a[j+2]=mk[i]?60:y;a[j+3]=255;}x.putImageData(im,0,0);},
+ ui(now){if($('admin').hidden||adminTab!=='show')return;
+  $('cam_st').textContent=S.cam&&!this.ok?this.st:'';
+  const sec=ms=>{const s=Math.round(ms/1000);return s<60?s+'초':Math.floor(s/60)+'분 '+(s%60)+'초';};
+  $('cam_lv').textContent=!S.cam?'꺼짐':!this.ok?'—':(this.lv*100).toFixed(1)+' % (켜지는 기준 '+(this.need()*100).toFixed(1)+' %) · 마지막 움직임 '+sec(now-this.lastMotion)+' 전 · 끄기까지 '+sec(Math.max(0,this.mins()*60000-(now-this.last())));
+  if(this.ok)this.preview();},
+ tick(){const now=Date.now(),gap=now-this.lastTick;this.lastTick=now;
+  if(gap>20000){this.lastMotion=now;if(this.blank)this.wake('절전에서 깨어남');if(this.stream){this.stop();this.retryT=-1e12;}} // 절전 뒤에는 카메라를 새로 엶
+  if(S.cam&&!this.want){this.retryT=-1e12;this.lastErr='';}this.want=!!S.cam;
+  if(!S.cam){if(this.stream)this.stop();this.st='';if(this.blank)this.wake('카메라 기능 끔');this.ui(now);return;}
+  if(!this.stream){if(!this.busy&&now-this.retryT>this.retryMs){this.retryT=now;this.start();}if(this.blank)this.wake('카메라 안 됨');this.ui(now);return;}
+  const v=this.v,tr=this.stream.getVideoTracks()[0];
+  if(!tr||tr.readyState==='ended'){this.fail('카메라 연결이 끊겼습니다',3e4);if(this.blank)this.wake('카메라 안 됨');this.ui(now);return;}
+  if(tr.muted){if(!this.mutedT)this.mutedT=now;}else this.mutedT=0;
+  if(this.mutedT&&now-this.mutedT>8000){this.mutedT=0;this.fail('카메라 영상이 들어오지 않습니다',3e4);if(this.blank)this.wake('카메라 안 됨');this.ui(now);return;}
+  if(v.readyState>=2&&v.videoWidth&&v.currentTime!==this.lastCT){this.lastCT=v.currentTime;this.lastF=now;
+   const fr=this.diff();this.lv=fr;if(fr>this.need()){if(++this.hits>=2)this.lastMotion=now;}else this.hits=0;}
+  if(now-this.lastF>8000){this.fail('카메라 영상이 멈췄습니다',3e4);if(this.blank)this.wake('카메라 안 됨');this.ui(now);return;}
+  const run=C.st>=1&&C.st<=6;
+  if(this.blank){if(run)this.wake('압축 시작');else if(now>this.testT&&now-lastInteract<1500)this.wake('마우스 · 키보드');else if(now>this.testT&&now-this.lastMotion<1500)this.wake('움직임');}
+  else if(!run&&now-this.last()>this.mins()*60000&&$('admin').hidden&&$('pin').hidden)this.sleep('움직임 없음 '+this.mins()+'분');
+  this.ui(now);}};
+setInterval(()=>CAM.tick(),250);
+$('cam_test').onclick=()=>{if(!S.cam||!CAM.ok){toast('카메라가 켜져 있지 않습니다','[쓰기] 를 켜고 아래에 영상이 보이면 다시 누르세요.','bad',4000);return;}
+ CAM.testT=Date.now()+3000;$('admin').hidden=true;CAM.sleep('시험');};
+
 // ───────── 반복 작업
 let recPend=[],burnI=0;
 setInterval(()=>{const now=Date.now(),d=new Date(now);
@@ -1778,7 +1844,7 @@ setInterval(()=>{if(DL.ok&&!S.simLog)DL.write('S\n');},30000);
 
 // ───────── 그리기 루프 (30 fps)
 let lastF=0;
-function frame(now){requestAnimationFrame(frame);if(now-lastF<32)return;const dt=Math.min(.1,(now-lastF)/1000);lastF=now;
+function frame(now){requestAnimationFrame(frame);if(CAM.dark||now-lastF<32)return;const dt=Math.min(.1,(now-lastF)/1000);lastF=now;
  envDraw(now);rigStep();const mode=machineView();airView();
  const t=Date.now();if(MODE==='live'){CH.pm.draw(t);CH.amp.draw(t);CH.load.draw(t);CH.cr.draw(t);RIGS[0].draw(RIG.p,mode);}
  else if(MODE==='present'){CH.cyc.draw(t);RIGS[1].draw(RIG.p,mode);}
