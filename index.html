@@ -132,6 +132,7 @@ body:not([data-mode=live]) #live{display:none}
 .chartp{display:flex;flex-direction:column;min-height:0;padding:18px 20px 14px}
 .ph{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
 .ph h3{font-size:17px;font-weight:600;letter-spacing:-.02em}
+.ph .lnow{margin-left:auto;display:flex;align-items:baseline;gap:5px}.ph .lnow b{font-size:30px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1}.ph .lnow small{font-size:14px;color:var(--ink2)}
 .legend{display:flex;gap:14px;font-size:13px;color:var(--ink2)}
 .legend span{display:inline-flex;align-items:center;gap:6px}
 .legend i{width:14px;height:3px;border-radius:2px;background:var(--c)}
@@ -432,16 +433,16 @@ pre.log{font:13px/1.5 ui-monospace,Consolas,monospace;white-space:pre-wrap;word-
     <div class="rigw"><canvas id="cv_rig"></canvas></div>
     <div class="gauge" data-gauge>
      <svg viewBox="0 0 200 200" aria-hidden="true"><circle class="track" cx="100" cy="100" r="86"/><circle class="arc" cx="100" cy="100" r="86"/></svg>
-     <div class="gin"><b data-n="force">0</b><span>N</span><p data-k="forceLbl">추정 압축력</p></div>
+     <div class="gin"><b data-n="gv">—</b><span>A</span><p>모터 전류</p></div>
     </div>
    </div>
    <ol class="rail">
     <li data-step="0"><i></i>대기</li><li data-step="1"><i></i>압축</li><li data-step="2"><i></i>유지</li><li data-step="3"><i></i>내림</li>
    </ol>
    <div class="mfoot">
-    <div><span class="lbl">전류</span><b data-n="amp">—</b><small>A</small></div>
+    <div><span class="lbl">최대 전류</span><b data-n="pkA">—</b><small>A</small></div>
     <div><span class="lbl">경과</span><b data-n="elapsed">—</b><small>초</small></div>
-    <div><span class="lbl">완료까지</span><b data-k="pct">—</b><small>%</small></div>
+    <div><span class="lbl">속도</span><b data-k="spd">—</b><small>%</small></div>
    </div>
   </section>
 
@@ -451,8 +452,8 @@ pre.log{font:13px/1.5 ui-monospace,Consolas,monospace;white-space:pre-wrap;word-
     <div class="cw"><canvas id="cv_amp" aria-label="모터 전류 그래프"></canvas><div class="tip" hidden></div></div>
    </div>
    <div class="panel chartp">
-    <div class="ph"><h3 data-k="loadTitle">압축률 (추정)</h3></div>
-    <div class="cw"><canvas id="cv_cr" aria-label="압축할 때마다의 추정 압축률"></canvas><canvas id="cv_load" aria-label="로드셀 그래프" style="display:none"></canvas><div class="tip" hidden></div></div>
+    <div class="ph"><h3>누르는 힘</h3><span class="lnow"><b data-n="loadNow">—</b><small data-k="loadU">kg</small></span></div>
+    <div class="cw"><canvas id="cv_load" aria-label="로드셀 누르는 힘 그래프"></canvas><div class="tip" hidden></div></div>
    </div>
   </section>
  </main>
@@ -468,7 +469,7 @@ pre.log{font:13px/1.5 ui-monospace,Consolas,monospace;white-space:pre-wrap;word-
   <div class="p-top panel strong">
    <div class="gauge" data-gauge>
     <svg viewBox="0 0 200 200" aria-hidden="true"><circle class="track" cx="100" cy="100" r="86"/><circle class="arc" cx="100" cy="100" r="86"/></svg>
-    <div class="gin"><b data-n="force">0</b><span>N</span><p data-k="forceLbl">추정 압축력</p></div>
+    <div class="gin"><b data-n="gv">—</b><span>A</span><p>모터 전류</p></div>
    </div>
    <div>
     <ol class="steps">
@@ -497,7 +498,7 @@ pre.log{font:13px/1.5 ui-monospace,Consolas,monospace;white-space:pre-wrap;word-
  <nav class="dock panel" aria-label="오늘 기록">
   <div><span>오늘 압축</span><span class="v"><b data-n="cycles">0</b><small>회</small></span></div>
   <div><span>왕복 시간</span><span class="v"><b data-n="lastCycle">—</b><small>초</small></span></div>
-  <div><span>최대 압축력</span><span class="v"><b data-n="maxF">—</b><small>N</small></span></div>
+  <div><span>최대 전류</span><span class="v"><b data-n="maxA">—</b><small>A</small></span></div>
   <div><span>전력량</span><span class="v"><b data-n="energy">0</b><small>Wh</small></span></div>
  </nav>
 </div>
@@ -602,7 +603,7 @@ pre.log{font:13px/1.5 ui-monospace,Consolas,monospace;white-space:pre-wrap;word-
    </div></div>
    <div class="grp"><h4>속도 · 힘 <small class="cap">(압축할 때 쓰임. 제어부에 저장, 대기 상태에서만 바뀝니다)</small></h4><div class="card">
     <div class="row slr"><label for="sl_P">속도<small>올림 · 원점 복귀 모두 이 속도. 너무 느리면 힘이 모자라 완료 전류에 못 닿고 시간 제한으로 멈출 수 있음</small></label><input type="range" id="sl_P" min="60" max="255" step="5"><output id="so_P">—</output><button class="b ghost" data-sl="P">적용</button></div>
-    <div class="row slr"><label for="sl_T">누르는 힘<small>이 전류에 닿으면 압축을 멈춤 (권장 1000 mA 이하). N 은 전류로 계산한 추정값 (가상 실험 기준)</small></label><input type="range" id="sl_T" min="300" max="1000" step="50"><output id="so_T">—</output><button class="b ghost" data-sl="T">적용</button></div>
+    <div class="row slr"><label for="sl_T">멈춤 전류<small>올림 중 이 전류에 닿으면 압축을 멈춤 (권장 1000 mA 이하). 이 값까지 안 오르면 액추에이터 끝이나 시간 제한에서 멈춤</small></label><input type="range" id="sl_T" min="300" max="1000" step="50"><output id="so_T">—</output><button class="b ghost" data-sl="T">적용</button></div>
    </div></div>
    <div class="grp"><h4>제어부 설정값 <small class="cap">(제어부 EEPROM에 저장, 대기 상태에서만 바뀝니다)</small></h4><div class="card">
     <div class="row"><label for="cf_T">압축 완료 전류 (mA)<small>권장 1000 이하 (구조해석 안전율 기준)</small></label><input type="number" id="cf_T" min="300" max="4000" step="50"><button class="b ghost" data-cf="T">적용</button></div>
@@ -677,16 +678,12 @@ pre.log{font:13px/1.5 ui-monospace,Consolas,monospace;white-space:pre-wrap;word-
     <div class="row"><label for="s_refDelta">증가량 (µg/m³)</label><input type="number" id="s_refDelta" data-s="refDelta" min="1" max="2000"></div>
     <div class="row"><label for="s_refLabel">선 이름</label><input type="text" class="w" id="s_refLabel" data-s="refLabel"></div>
    </div></div>
-   <div class="grp"><h4>압축력 추정</h4><div class="card">
-    <div class="row"><span class="k">F (N) = a × I (A) + b<small>기본값은 실험 C 의 힘–전류 직선 (가상 실험)</small></span><input type="number" step="0.1" data-s="fa" style="width:90px" aria-label="a"><input type="number" step="0.1" data-s="fb" style="width:90px" aria-label="b"></div>
-    <div class="row"><label for="s_vbus">모터 전원 전압 (V)<small>전력량 계산에 씀</small></label><input type="number" id="s_vbus" data-s="vbus" step="0.1" min="5" max="24"></div>
-   </div></div>
-   <div class="grp"><h4>압축률 추정</h4><div class="card">
-    <div class="row"><label for="s_panel2">오른쪽 아래 그래프</label><select id="s_panel2" data-s="panel2"><option value="cr">압축률 (추정)</option><option value="load">로드셀 (통 무게 · 압축력)</option></select></div>
-    <div class="row"><label for="s_upEmpty">빈 통 올림 시간 (초)<small>통을 비우고 압축 한 번 → 기록 탭의 '올림' 값을 넣을 것. 압축률 = 1 − (이 시간 − 올림 시간) ÷ (이 시간 − 파쇄지에 닿은 시각)</small></label><input type="number" id="s_upEmpty" data-s="upEmpty" step="0.1" min="3" max="120"></div>
+   <div class="grp"><h4>전력량</h4><div class="card">
+    <div class="row"><label for="s_vbus">모터 전원 전압 (V)<small>전력량 = 전압 × 전류 × 시간</small></label><input type="number" id="s_vbus" data-s="vbus" step="0.1" min="5" max="24"></div>
    </div></div>
    <div class="grp"><h4>로드셀</h4><div class="card">
-    <div class="row"><label for="s_loadMode">로드셀 용도</label><select id="s_loadMode" data-s="loadMode"><option value="weight">통 무게 (kg)</option><option value="force">압축력 측정 (N)</option></select></div>
+    <div class="row"><label for="s_loadMode">누르는 힘 단위</label><select id="s_loadMode" data-s="loadMode"><option value="weight">kg</option><option value="force">N</option></select></div>
+    <div class="row"><label for="s_autoZero">자동 영점<small>압축부가 멈춰 있고 값이 10초 동안 그대로면(2 kg 넘으면 1분) 그 값을 0 으로 맞춥니다. 1분에 한 번까지</small><small id="az_st"></small></label><span class="sw"><input type="checkbox" id="s_autoZero" data-s="autoZero"><i></i></span></div>
     <div class="row"><label for="s_guard">로드셀 보호 정지<small>무게가 기준을 넘으면 압축부에 정지를 보냅니다 (움직이는 중에만)</small></label><span class="sw"><input type="checkbox" id="s_guard" data-s="guard"><i></i></span></div>
     <div class="row"><label for="s_guardKg">보호 기준 (kg)</label><input type="number" id="s_guardKg" data-s="guardKg" min="1" max="50"></div>
    </div></div>
@@ -818,15 +815,15 @@ const DEF={pin:'0000',title:'분진 비산 저감을 위한 모듈 적층식 압
  theme:'light',glass:true,lite:false,burnin:true,hideCursor:true,sound:true,
  attractMin:3,sceneSec:9,qr:true,autoLockMin:10,cam:false,camMin:10,camSens:'mid',
  simCtrl:false,simLog:false,simAutoSec:70,autoDemo:false,autoDemoMin:10,record:true,
- vbus:12,fa:247,fb:-60.8,loadMode:'weight',panel2:'cr',upEmpty:16,guard:true,guardKg:18,
+ vbus:12,fa:247,fb:-60.8,loadMode:'weight',panel2:'load',upEmpty:16,autoZero:true,rigUp:16,rigDown:14,guard:true,guardKg:18,
  aq25:[15,35,75],aq10:[30,80,150],refOn:true,refDelta:111,refLabel:'기존 방식 최고 (가상 실험)',
- winPm:300,winAmp:120,winLoad:300,
+ winPm:300,winAmp:120,winLoad:60,
  results:[{v:'72',u:'%',t:'PM10 증가량 감소',s:'기존 방식 대비'},{v:'1.22',u:'배',t:'실효 압축비',s:''},{v:'43',u:'초',t:'압축 왕복 시간',s:''}],
  resultNote:'가상 실험값 (실측 아님)'};
 // 예전 기본 문구가 저장돼 있으면 새 기본값으로 바꿈 (직접 고친 문구는 그대로)
 const OLDTXT={sub:'v40 · 2026 캡스톤 디자인',refLabel:'기존 세단 방식 최고치 (가상 실험)',resultNote:'가상 실험값입니다 (실측 아님)'},
  OLDRES=[['세단할 때 PM10 최고 증가량 감소','기존 방식 대비'],['가득 채운 통의 실효 압축비','눌렀다 풀고 30초 뒤'],['압축 한 번 왕복 시간','올림, 유지, 내림']];
-function migTxt(o){if(!o.themeV2){o.theme='light';o.themeV2=1;}if(!o.pinV2){if(String(o.pin)==='4040')o.pin='0000';o.pinV2=1;}for(const k in OLDTXT)if(o[k]===OLDTXT[k])o[k]=DEF[k];if(Array.isArray(o.results))o.results.forEach((r,i)=>{const d=OLDRES[i];if(r&&d){if(r.t===d[0])r.t=DEF.results[i].t;if(r.s===d[1])r.s=DEF.results[i].s;}});return o;}
+function migTxt(o){if(!o.themeV2){o.theme='light';o.themeV2=1;}if(!o.pinV2){if(String(o.pin)==='4040')o.pin='0000';o.pinV2=1;}if(!o.loadV2){o.panel2='load';if(o.winLoad===300)o.winLoad=60;o.loadV2=1;}for(const k in OLDTXT)if(o[k]===OLDTXT[k])o[k]=DEF[k];if(Array.isArray(o.results))o.results.forEach((r,i)=>{const d=OLDRES[i];if(r&&d){if(r.t===d[0])r.t=DEF.results[i].t;if(r.s===d[1])r.s=DEF.results[i].s;}});return o;}
 const clone=o=>JSON.parse(JSON.stringify(o));
 let S=clone(DEF);
 try{const j=JSON.parse(localStorage.getItem('v40ex_settings')||'{}');Object.assign(S,j);}catch(e){}
@@ -845,7 +842,7 @@ async function append(name,text,header){return post('/api/append?f='+encodeURICo
 let STARTED=false;
 
 // ───────── 통계
-const ST0=()=>({day:ymd(new Date()),cycles:0,faults:0,cycSum:0,maxF:0,energy:0,last:null});
+const ST0=()=>({day:ymd(new Date()),cycles:0,faults:0,cycSum:0,maxF:0,maxA:0,energy:0,last:null});
 let STT={today:ST0(),total:{cycles:0,faults:0},recent:[]};
 try{const j=JSON.parse(localStorage.getItem('v40ex_stats')||'null');if(j&&j.today)STT=j;}catch(e){}
 let statT=0;
@@ -992,7 +989,7 @@ function lsend(s){if(S.simLog){SIM.lcmd(s);return;}if(!DL.ok){toast('로거가 �
 function ctrlLine(l,src){
  if(src==='real'&&S.simCtrl)return;if(src==='sim'&&!S.simCtrl)return;
  const now=Date.now();C.last=now;
- if(l.startsWith('$S ')){const o=kv(l.slice(3)),prevS=C.lastS||0;Object.assign(C,{ma:o.ma,pk:o.pk,vcc:o.vcc,lo:o.lo,hi:o.hi,bt:o.bt,home:o.home,lk:o.lk,d:o.d,t:o.t});
+ if(l.startsWith('$S ')){const o=kv(l.slice(3)),prevS=C.lastS||0;Object.assign(C,{ma:o.ma,pk:o.pk,vcc:o.vcc,lo:o.lo,hi:o.hi,bt:o.bt,home:o.home,lk:o.lk,d:o.d,t:o.t,pwm:o.pwm});rigS(o,prevS,now);
   if(o.st!==C.st)stChange(o.st);
   C.lastS=now;D.amp.push(now,o.ma/1000);D.st.push(now,o.st);
   if(CYC.on){CYC.ring.push(now-CYC.t0,o.ma/1000);CYC.pk=Math.max(CYC.pk,o.ma);
@@ -1003,9 +1000,10 @@ function ctrlLine(l,src){
  if(l.startsWith('$C ')){C.cfg=kv(l.slice(3));fillCfg();devPanel();}
  else if(l.startsWith('$Z ')){C.zero=kv(l.slice(3));devPanel();}
  else if(l.startsWith('$P ')){stChange(kv(l.slice(3)).st);}
- else if(l.startsWith('$E ')){const o=kv(l.slice(3));if(C.st===1||C.st===6)CYC.upWhy=o.why;
+ else if(l.startsWith('$E ')){const o=kv(l.slice(3));rigE(o);if(C.st===1||C.st===6)CYC.upWhy=o.why;
   if(o.why==='lock'){if(OP.on)toast('아직 다시 누를 수 없습니다','재압축 금지 시간이 '+o.t+'초 남았습니다.','',4000);}
   else if(o.why==='acs')toast('전류 센서 영점 이상','전원을 껐다 켜거나 관리자 화면에서 전류 영점을 다시 맞추세요.','bad',6000);}
+ else if(l.startsWith('$B ')){rigB(kv(l.slice(3)));}
  else if(l.startsWith('$A ')){cycleDone(kv(l.slice(3)));}
  else if(l.startsWith('$F ')){C.faultWhy=kv(l.slice(3)).why;}
  else if(l.startsWith('=ID')){C.id=l.slice(4);DC.id='ctrl';chips();}
@@ -1030,15 +1028,15 @@ function crEstimate(upMs){const R=CYC.ring,full=(C.cfg&&C.cfg.full)||1000,T=Math
  return{cr:clamp(1-after/before,0,.95),fb:clamp(before/T,0,1),fa:clamp(after/T,0,1)};}
 function cycleDone(o){const now=new Date();GL.glintT=performance.now();
  const up=o.up/1000,down=o.down/1000,hold=(C.cfg&&C.cfg.hold!=null)?C.cfg.hold:2,tot=up+hold+down;
- const fmax=CYC.fmax||force(o.pk),est=(!CYC.upWhy||CYC.upWhy==='full')?crEstimate(o.up):null;const r={t:now,up,down,hold,tot,pk:o.pk/1000,fmax,E:CYC.E,why:CYC.upWhy,rise:Math.max(0,CYC.pmMax-CYC.base)};
+ const fmax=CYC.fmax||force(o.pk),est=null;const r={t:now,up,down,hold,tot,pk:o.pk/1000,fmax,E:CYC.E,why:CYC.upWhy,rise:Math.max(0,CYC.pmMax-CYC.base)};
  CYC.on=false;lastCycleEnd=Date.now();
  RIG.tUp=RIG.tUp*.4+up*.6;RIG.tDown=RIG.tDown*.4+down*.6;
- const X=SX(),T=X.today;T.cycles++;T.cycSum+=tot;T.maxF=Math.max(T.maxF,fmax);T.energy+=CYC.E;T.last=r;X.total.cycles++;
+ const X=SX(),T=X.today;T.cycles++;T.cycSum+=tot;T.maxF=Math.max(T.maxF,fmax);T.maxA=Math.max(T.maxA||0,r.pk);T.energy+=CYC.E;T.last=r;X.total.cycles++;
  X.recent.unshift({t:hms(now),up:+up.toFixed(1),down:+down.toFixed(1),tot:+tot.toFixed(1),f:Math.round(fmax),pk:+r.pk.toFixed(2),why:r.why,cr:est?Math.round(est.cr*100):null,fb:est?Math.round(est.fb*100):null,fa:est?Math.round(est.fa*100):null});X.recent=X.recent.slice(0,30);saveStats();
  if(S.record)append(simPrefix()+'전시_사이클기록.csv',[isoL(now),up.toFixed(2),hold,down.toFixed(2),tot.toFixed(2),r.why,r.pk.toFixed(3),Math.round(fmax),r.E.toFixed(4),Math.round(r.rise),simFlag(),est?Math.round(est.cr*100):''].join(',')+'\r\n','pc_time,up_s,hold_s,down_s,total_s,up_stop,peak_A,force_max_N,energy_Wh,pm10_rise,sim,cr_est_pct');
- evt('cycle','압축 끝 · 왕복 '+tot.toFixed(1)+'초 · 최대 추정 압축력 '+Math.round(fmax)+' N');
+ evt('cycle','압축 끝 · 왕복 '+tot.toFixed(1)+'초 · 최대 전류 '+r.pk.toFixed(2)+' A · 올림 멈춤: '+(WHY[r.why]||r.why||'—'));
  toast('압축 완료','','',10000,
-  [['왕복',tot.toFixed(1),'초']].concat(est?[['추정 압축률',Math.round(est.cr*100),'%']]:[],[['추정 최대 압축력',Math.round(fmax),'N'],['최대 전류',r.pk.toFixed(2),'A']]));
+  [['왕복',tot.toFixed(1),'초'],['올림',up.toFixed(1),'초'],['최대 전류',r.pk.toFixed(2),'A']]);
  beep('done');renderStats();}
 
 // ───────── 로거 줄 처리
@@ -1047,7 +1045,7 @@ function logLine(l,src){
  const m=l.match(/^(\d+),(\d+),(\d+),(\d+),([-\d.]+|nan),(\d+)$/);
  if(m){const now=Date.now();Object.assign(L,{pm1:+m[2],pm25:+m[3],pm10:+m[4],w:m[5]==='nan'?null:+m[5],mk:+m[6],last:now});
   D.pm25.push(now,L.pm25);D.pm10.push(now,L.pm10);D.pm1.push(now,L.pm1);if(L.w!=null)D.load.push(now,L.w);
-  if(CYC.on)CYC.pmMax=Math.max(CYC.pmMax,L.pm10);guard();return;}
+  if(CYC.on)CYC.pmMax=Math.max(CYC.pmMax,L.pm10);guard();autoZero(now);return;}
  log('l',l);
  let k;if((k=l.match(/scale=([-\d.]+)/)))L.scale=+k[1];
  if(/^# st /.test(l)){const o=kv(l.slice(5));L.sens='OLED '+(o.oled?'정상':'없음')+', 로드셀 '+(o.hx?'정상':'없음')+', 먼지 센서 '+(o.pms?'정상':'신호 없음');}
@@ -1055,6 +1053,17 @@ function logLine(l,src){
  if(/PMS 신호 없음/.test(l))evt('sensor','먼지 센서 신호 없음');
  if(/logger/.test(l))DL.id='log';
  devPanel();}
+// 로드셀 자동 영점: 압축부가 멈춰 있고 값이 한동안 그대로면 로거에 T(영점)를 보냄 (1분에 한 번까지)
+//  흔들림 = 창 안의 최대 − 최소가 30 g 와 평균의 2 % 중 큰 값 이하. 2 kg 이 넘게 그대로면 1분을 기다림 (누르고 있는 손과 구분)
+const AZ={last:0,n:0};
+function autoZero(now){if(!S.autoZero||L.w==null||now-AZ.last<60000)return;
+ if(ctrlFresh()&&C.st>=1&&C.st<=6||now-lastCycleEnd<30000)return;
+ const r=D.load,win=Math.abs(L.w)>2000?60000:10000;if(!r.t.length||now-r.t[0]<win)return;
+ const i0=r.lb(now-win),a=r.v.slice(i0);if(a.length<win/1000||r.t[i0]-(now-win)>1500)return; // 창 전체에 값이 있어야 함 (끊겼다 다시 들어온 직후 제외)
+ let mn=Infinity,mx=-Infinity,s=0;for(const v of a){if(v<mn)mn=v;if(v>mx)mx=v;s+=v;}const m=s/a.length;
+ if(mx-mn>Math.max(30,Math.abs(m)*.02)||Math.abs(m)<15)return;
+ AZ.last=now;AZ.n++;lsend('T');evt('zero','로드셀 자동 영점 ('+(m/1000).toFixed(2)+' kg → 0)');
+ const st=$('az_st');if(st)st.textContent='마지막 자동 영점 '+hms(new Date())+' ('+(m/1000).toFixed(2)+' kg 를 0 으로)';}
 let guardT=0;
 function guard(){if(!S.guard||L.w==null)return;const kg=L.w/1000;if(kg>S.guardKg&&C.st>0&&C.st<7&&Date.now()-guardT>2000){guardT=Date.now();send('s');evt('guard','로드셀 '+kg.toFixed(1)+' kg → 기준 '+S.guardKg+' kg 초과, 정지 보냄');toast('로드셀 보호 정지','측정 무게가 '+S.guardKg+' kg를 넘어 압축을 멈췄습니다.','bad',8000);}}
 const PB={t:0,v:0};
@@ -1064,7 +1073,7 @@ function pmBase(){const now=Date.now();if(now-PB.t<1000)return PB.v;const r=D.pm
 // ───────── 시뮬레이션 (실험실 페이지 연습 모드를 전시용으로 다듬은 것)
 const SIM={timer:null,n:0,
  c:{st:0,p:0,d:0,t0:0,tSt:0,pk:0,ma:0,sig:0,up:0,contact:.45,lastAuto:Date.now(),cfg:{full:1000,stall:3200,hard:4200,end:60,max:26,hold:2,lock:0,low:5,pwm:255,lo:1,hi:1,rev:1}},
- l:{pm25:6,w:420,tare:0,mk:0,shredUntil:0,nextShred:Date.now()+20000},
+ l:{pm25:6,w:420,tare:0,mk:0,shredUntil:0,nextShred:Date.now()+20000,drift:0,pressT:Date.now()+15000,pressD:0,pressKg:0},
  out(l){ctrlLine(l,'sim');},lout(l){logLine(l,'sim');},
  cfgLine(){this.out('$C '+Object.entries(this.c.cfg).map(([k,v])=>k+'='+v).join(' '));},
  start(){if(this.timer)return;this.timer=setInterval(()=>this.tick(),100);},
@@ -1106,7 +1115,9 @@ const SIM={timer:null,n:0,
    const shred=now<l.shredUntil,cst=S.simCtrl?this.c.st:C.st;
    const tgt=6+(shred?22:0)+((cst>=1&&cst<=3)?5:0);l.pm25+=(tgt-l.pm25)*.07+(Math.random()-.5)*1.6;l.pm25=Math.max(1,l.pm25);
    const pm25=Math.round(l.pm25),pm10=Math.round(l.pm25*1.45+Math.random()*3),pm1=Math.round(l.pm25*.68);
-   let raw;if(S.loadMode==='force'){const c=this.c;raw=(cst===1&&S.simCtrl)?force(c.ma)/9.81*1000:(cst===2&&S.simCtrl?force(c.cfg.full)/9.81*1000:0);}else raw=l.w;
+   if(now>l.pressT+l.pressD){l.pressT=now+18000+Math.random()*25000;l.pressD=1500+Math.random()*3000;l.pressKg=3+Math.random()*12;}
+   l.drift+=(Math.random()-.5)*4;const pt=(now-l.pressT)/l.pressD,press=pt>0&&pt<1?l.pressKg*1000*Math.sin(Math.PI*pt)*(.9+Math.random()*.2):0;
+   const raw=l.w+l.drift+press;
    l.lastRaw=raw;const w=raw-l.tare+(Math.random()-.5)*3;
    this.lout((now%1e7)+','+pm1+','+pm25+','+pm10+','+w.toFixed(1)+','+l.mk);}}
 };
@@ -1230,24 +1241,27 @@ function makeCharts(){
  const band=st=>st===1?css('--amp')+'2e':st===2?css('--amp')+'1a':(st===3||st===4)?css('--ink4'):st===6||st===7?css('--crit')+'26':null;
  CH.amp=new Chart($('cv_amp'),{zero:true,span:.5,domain:n=>[n-S.winAmp*1000,n],xlab:()=>['−'+winLab(S.winAmp),'지금'],tipT:t=>hms(new Date(t)),unit:'A',
   series:()=>[{ring:D.amp,color:'--amp',label:'모터 전류',unit:'A',fill:true}],bands:{ring:D.st,color:band},
-  refs:()=>C.cfg?[{v:fullA(),fit:true,label:'완료 '+fullA().toFixed(2)+' A'}]:[]});
- CH.load=new Chart($('cv_load'),{get span(){return S.loadMode==='force'?20:.5;},domain:n=>[n-S.winLoad*1000,n],xlab:()=>['−'+winLab(S.winLoad),'지금'],tipT:t=>hms(new Date(t)),
+  refs:()=>[]});
+ CH.load=new Chart($('cv_load'),{zero:true,get span(){return S.loadMode==='force'?20:.5;},domain:n=>[n-S.winLoad*1000,n],xlab:()=>['−'+winLab(S.winLoad),'지금'],tipT:t=>hms(new Date(t)),
   get unit(){return S.loadMode==='force'?'N':'kg';},
-  series:()=>[{ring:D.load,color:'--load',label:S.loadMode==='force'?'압축력':'무게',unit:S.loadMode==='force'?'N':'kg',fill:true,map:loadMap()}],
+  series:()=>[{ring:D.load,color:'--load',label:'누르는 힘',unit:S.loadMode==='force'?'N':'kg',fill:true,map:loadMap()}],
   refs:()=>S.loadMode==='force'&&S.guard?[{v:S.guardKg*9.81,label:'보호 '+S.guardKg+' kg'}]:[]});
  CH.cyc=new Chart($('cv_cyc'),{zero:true,span:.5,live:false,domain:()=>{const el=CYC.ring.t.length?CYC.ring.t.at(-1):0;const exp=(RIG.tUp+((C.cfg&&C.cfg.hold)||2)+RIG.tDown)*1000;return[0,Math.max(exp,el+3000)];},
   xlab:(a,b)=>['0초',Math.round(b/1000)+'초'],tipT:t=>(t/1000).toFixed(1)+'초',unit:'A',
-  series:()=>[{ring:CYC.ring,color:'--amp',label:'모터 전류',unit:'A',fill:true}],refs:()=>[{v:fullA(),fit:true,label:'완료 '+fullA().toFixed(2)+' A'}]});
- CH.cr=new Bars($('cv_cr'));
+  series:()=>[{ring:CYC.ring,color:'--amp',label:'모터 전류',unit:'A',fill:true}],refs:()=>[]});
 }
 
-// ───────── 리프트 그림 (위치는 동작 시간으로 추정)
-const RIG={p:0,tUp:16,tDown:14,lastT:performance.now()};
-function rigStep(){const now=performance.now(),dt=Math.min(.2,(now-RIG.lastT)/1000);RIG.lastT=now;if(!ctrlFresh())return;
- const s=C.st;if(s===0&&C.home){RIG.p+=(0-RIG.p)*.2;return;}
- if(s===1)RIG.p=Math.min(.97,RIG.p+dt/RIG.tUp);
- else if(s===3||s===4||s===6)RIG.p=Math.max(0,RIG.p-dt/RIG.tDown);
- else if(s===5)RIG.p=clamp(RIG.p+C.d*dt/(RIG.tUp*1.4),0,1);}
+// ───────── 리프트 그림: 위치 센서가 없어서 제어부가 알려 주는 구동 방향(d) · 세기(pwm) · 시간으로 따라감
+//  kUp · kDown = 끝에서 끝까지 걸리는 시간(전속 기준 초). 끝에서 출발해 반대쪽 끝(액추에이터 끝 · 리밋)에 닿으면 그 구간으로 다시 맞춤
+//  끝에 닿았다는 신호($E why=end · limit, 하한 · 상한 스위치, 원점 대기)가 오면 그림을 그 끝에 맞춤
+const RIG={p:0,tUp:16,tDown:14,u:0,from:0,dir:0,get kUp(){return clamp(+S.rigUp||16,3,60);},get kDown(){return clamp(+S.rigDown||14,3,60);}};
+function rigS(o,prevS,now){if(o.d&&prevS){const u=(o.pwm||0)/255*Math.min(.5,(now-prevS)/1000);RIG.u+=u;RIG.p=clamp(RIG.p+(o.d>0?u/RIG.kUp:-u/RIG.kDown),0,1);}
+ if(o.lo||(o.st===0&&o.home))RIG.p=0;else if(o.hi)RIG.p=1;}
+function rigB(o){RIG.u=0;RIG.from=RIG.p;RIG.dir=+o.d||0;}
+function rigE(o){const d=RIG.dir;RIG.dir=0;if(!d||(o.why!=='end'&&o.why!=='limit'))return;
+ if(d>0){if(RIG.from<.03&&RIG.u>2){S.rigUp=+(RIG.kUp*.5+RIG.u*.5).toFixed(2);saveSettings();}RIG.p=1;}
+ else{if(RIG.from>.97&&RIG.u>2){S.rigDown=+(RIG.kDown*.5+RIG.u*.5).toFixed(2);saveSettings();}RIG.p=0;}}
+function rigStep(){}
 class Rig{constructor(cv){this.cv=cv;this.g=cv.getContext('2d');this.pv=0;this.strips=[];for(let r=0;r<22;r++){const row=[];let x=Math.random()*.06;while(x<1){const w=.04+Math.random()*.11;row.push([x,w,Math.random()]);x+=w+.012+Math.random()*.03;}this.strips.push(row);}
   new ResizeObserver(()=>{const b=cv.getBoundingClientRect(),d=Math.min(2,devicePixelRatio||1);this.W=b.width;this.H=b.height;this.d=d;cv.width=Math.max(1,b.width*d);cv.height=Math.max(1,b.height*d);}).observe(cv);}
  draw(p,mode){const {g,W,H}=this;if(!W||!H||!this.cv.offsetParent)return;this.pv+=(p-this.pv)*.12;const pv=this.pv;
@@ -1291,7 +1305,7 @@ function sprite(rgb){let s=ENV.sprite.get(rgb);if(s)return s;s=document.createEl
 const PCOL={dark:['205,228,255','210,240,220','255,214,160','255,170,155'],light:['40,90,160','40,120,70','170,90,20','180,40,40']};
 function envDraw(now){const gm=GL.on,g=gm?GL.pg:ENV.g,{W,H}=ENV;const dark=S.theme!=='light';const sc=gm?GL.ps:ENV.d;g.setTransform(sc,0,0,sc,0,0);
  const gi=Math.max(0,gradeOf(L.pm25,S.aq25)),tt=now/1000;
- const warmT=(C.st===1&&ctrlFresh())?clamp(C.ma/1000/fullA(),0,1):0;ENV.warm+=(warmT-ENV.warm)*.03;
+ const warmT=(C.st===1&&ctrlFresh())?clamp(C.ma/1000/ampScale(),0,1):0;ENV.warm+=(warmT-ENV.warm)*.03;
  const pool=(x,y,r,c)=>{const gr=g.createRadialGradient(x,y,0,x,y,r);gr.addColorStop(0,c);gr.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=gr;g.fillRect(0,0,W,H);};
  if(gm)g.clearRect(0,0,W,H);   // 리퀴드 글래스: 배경은 셰이더가, 여기서는 입자만
  else g.fillStyle=css('--env'),g.fillRect(0,0,W,H);
@@ -1577,6 +1591,7 @@ if(document.fonts)document.fonts.addEventListener('loadingdone',()=>{GL.gkey='';
 
 // ───────── 화면 갱신
 const SUB={};
+function ampScale(){let m=1;for(const r of SX().recent.slice(0,10))if(r&&r.pk>m)m=r.pk;if(CYC.on)m=Math.max(m,CYC.pk/1000);return m*1.1;}
 function machineView(){const fresh=ctrlFresh(),st=fresh?C.st:-1,now=Date.now();
  let w,sub;
  if(!fresh){w=S.simCtrl?'시뮬레이션 준비 중':(DC.ok?'신호 기다리는 중':'연결 대기');sub='';}
@@ -1588,30 +1603,25 @@ function machineView(){const fresh=ctrlFresh(),st=fresh?C.st:-1,now=Date.now();
  $('machine').classList.toggle('run',run);$('machine').classList.toggle('fault',fault);
  num('amp',fresh?C.ma/1000:null,2);
  const el=fresh&&st>=1&&st<=6?(CYC.on&&st<=3?(now-CYC.t0)/1000:(now-C.tState)/1000):null;num('elapsed',el,1);
- // 압축력 · 게이지
- let F,lbl,frac,dim=false;
- if(fresh&&st===1){F=force(C.ma);lbl='추정 압축력';frac=C.ma/1000/fullA();}
- else if(fresh&&st===2){F=CYC.fmax||force(C.pk);lbl='추정 최대';frac=1;}
- else if(fresh&&CYC.on&&CYC.fmax){F=CYC.fmax;lbl='추정 최대';frac=0;dim=true;}
- else if(SX().today.last){F=SX().today.last.fmax;lbl='지난 추정 최대';frac=0;dim=true;}
- else{F=0;lbl='추정 압축력';frac=0;}
- num('force',F,0);txt2('forceLbl',lbl);
- txt2('pct',fresh&&(st===1||st===2)?String(Math.round(clamp(frac,0,1.2)*100)):'—');
+ // 게이지 = 모터 전류 (실측). 눈금 끝 = 최근 압축들의 최대 전류 × 1.1 (최소 1 A)
+ const cur=fresh?C.ma/1000:null,frac=fresh?cur/ampScale():0,dim=!(fresh&&C.d);
+ num('gv',cur,2);num('pkA',CYC.on?CYC.pk/1000:(SX().today.last?SX().today.last.pk:null),2);
+ txt2('spd',fresh&&C.d?String(Math.round((C.pwm||0)/255*100)):'—');
  const len=405.27;for(const gEl of els('[data-gauge]')){gEl.classList.toggle('dim',dim);const arc=gEl.querySelector('.arc');arc.style.strokeDasharray=len+' 999';arc.style.strokeDashoffset=String(len*(1-clamp(frac,0,1)));}
  // 단계
  const si=!fresh?-1:st===0?0:st===1?1:st===2?2:(st===3||st===4||st===6)?3:-1;
- const prog=st===1?clamp((now-C.tState)/1000/RIG.tUp,0,1):st===2?clamp((now-C.tState)/1000/((C.cfg&&C.cfg.hold)||2),0,1):st===3?clamp((now-C.tState)/1000/RIG.tDown,0,1):si===0?1:0;
+ const prog=st===1?RIG.p:st===2?clamp((now-C.tState)/1000/((C.cfg&&C.cfg.hold)||2),0,1):st===3?1-RIG.p:si===0?1:0;
  for(const li of els('[data-step]')){const k=+li.dataset.step;li.classList.toggle('cur',k===si);li.classList.toggle('done',CYC.on&&si>0&&k<si&&k>0);const i=li.querySelector('i');if(i)i.style.setProperty('--p',k===si?prog:(CYC.on&&k<si&&k>0)?1:0);}
  // 오류 알림
  $('alert').hidden=!fault;if(fault)txt2('faultTxt',WHY[C.faultWhy]||'원인을 확인하고 있습니다');
  return fault?'fault':run?'run':'';}
-function airView(){const f=logFresh(),crOn=S.panel2!=='load';
- if(airView.cr!==crOn){airView.cr=crOn;$('cv_cr').style.display=crOn?'':'none';$('cv_load').style.display=crOn?'none':'';$('cv_cr').parentElement.querySelector('.tip').hidden=true;}
+function airView(){const f=logFresh(),lg=f&&L.w!=null?(Math.abs(L.w)<20?0:L.w):null;
+ num('loadNow',lg==null?null:loadMap()(lg),S.loadMode==='force'?0:1);txt2('loadU',S.loadMode==='force'?'N':'kg');
  num('pm25',f?L.pm25:null);num('pm10',f?L.pm10:null);num('pm1',f?L.pm1:null);
  setGrade('pm25',f?gradeOf(L.pm25,S.aq25):-1);setGrade('pm10',f?gradeOf(L.pm10,S.aq10):-1);
  if(f&&D.pm10.t.length>8){const d=Math.max(0,Math.round(L.pm10-pmBase()));txt2('dpm10','+'+d);}else txt2('dpm10','—');
- txt2('loadTitle',S.panel2==='load'?(S.loadMode==='force'?'로드셀 압축력':'통 무게'):'압축률 (추정)');}
-function statsView(){const T=SX().today;num('cycles',T.cycles);num('lastCycle',T.last?T.last.tot:null,1);num('maxF',T.maxF?T.maxF:null);num('energy',T.energy,3);
+}
+function statsView(){const T=SX().today;num('cycles',T.cycles);num('lastCycle',T.last?T.last.tot:null,1);num('maxA',T.maxA?T.maxA:null,2);num('energy',T.energy,3);
  const up=Math.floor((Date.now()-T_START)/60000);txt2('uptime',Math.floor(up/60)+':'+pad(up%60));}
 function chips(){const now=Date.now();
  const c=$('ch_c'),l=$('ch_l'),s=$('ch_s');
@@ -1682,7 +1692,7 @@ const CFG_KEYS={T:'full',O:'hold',W:'lock',P:'pwm',K:'stall',J:'hard',E:'end',M:
 // 펌웨어(compactor 4)의 처음 값 — D 명령으로 돌아가는 값
 const CFG_DEF={full:2400,stall:3200,hard:4200,end:60,max:26,hold:2,lock:0,low:5,pwm:255,lo:1,hi:1,rev:1};
 const SL_KEYS={P:'pwm',T:'full'};
-function slShow(k,v){$('so_'+k).textContent=k==='P'?Math.round(v/255*100)+' % (PWM '+v+')':v+' mA · 약 '+Math.round(force(v))+' N'+(v>1000?' · 권장 초과':'');}
+function slShow(k,v){$('so_'+k).textContent=k==='P'?Math.round(v/255*100)+' % (PWM '+v+')':(v/1000).toFixed(2)+' A'+(v>1000?' · 권장 초과':'');}
 // 손댄 칸(dirty)은 [적용] 전까지 제어부 값으로 덮어쓰지 않음
 function fillCfg(){if(!C.cfg)return;const keep=el=>!el||el.dataset.dirty||document.activeElement===el;
  for(const [k,f] of Object.entries(CFG_KEYS)){const el=$('cf_'+k);if(!keep(el)&&C.cfg[f]!=null)el.value=C.cfg[f];}
@@ -1730,8 +1740,8 @@ function devPanel(){if($('admin').hidden)return;
  $('dv_srv').innerHTML=SRV.ok?'<span class="okt">연결됨</span> · 저장 폴더 '+esc(SRV.dir):'<span class="badt">서버 없음</span> · 「시작.bat」으로 열어야 기록과 설정이 파일로 남습니다';
  $('rec_dir').textContent=SRV.ok?'저장 폴더: '+SRV.dir:'';}
 function renderStats(){if($('admin').hidden)return;const X=SX(),T=X.today,avg=T.cycles?T.cycSum/T.cycles:null;
- $('st_tbl').innerHTML=(S.simCtrl?'<caption class="msg warnt" style="text-align:left">제어부 시뮬레이션 중: 아래는 시뮬레이션 통계이며 저장하지 않습니다</caption>':'')+'<tr><th></th><th>오늘</th><th>누적</th></tr><tr><td>압축 횟수</td><td>'+T.cycles+'</td><td>'+X.total.cycles+'</td></tr><tr><td>안전 정지</td><td>'+T.faults+'</td><td>'+X.total.faults+'</td></tr><tr><td>평균 왕복</td><td>'+(avg?avg.toFixed(1)+' 초':'—')+'</td><td></td></tr><tr><td>최대 추정 압축력</td><td>'+(T.maxF?Math.round(T.maxF)+' N':'—')+'</td><td></td></tr><tr><td>전력량</td><td>'+T.energy.toFixed(3)+' Wh</td><td></td></tr>';
- $('cy_tbl').innerHTML='<tr><th>시각</th><th>올림</th><th>내림</th><th>왕복</th><th>압축률</th><th>압축력</th><th>최대 전류</th><th>멈춘 이유</th></tr>'+(X.recent.length?X.recent.slice(0,20).map(r=>'<tr><td>'+r.t+'</td><td>'+r.up+'</td><td>'+r.down+'</td><td>'+r.tot+'</td><td>'+(r.cr!=null?r.cr+' %':'—')+'</td><td>'+r.f+' N</td><td>'+r.pk+' A</td><td>'+esc(WHY[r.why]||r.why||'—')+'</td></tr>').join(''):'<tr><td colspan="8" class="cap">아직 압축 기록이 없습니다. 압축이 끝날 때마다 여기에 쌓입니다.</td></tr>');}
+ $('st_tbl').innerHTML=(S.simCtrl?'<caption class="msg warnt" style="text-align:left">제어부 시뮬레이션 중: 아래는 시뮬레이션 통계이며 저장하지 않습니다</caption>':'')+'<tr><th></th><th>오늘</th><th>누적</th></tr><tr><td>압축 횟수</td><td>'+T.cycles+'</td><td>'+X.total.cycles+'</td></tr><tr><td>안전 정지</td><td>'+T.faults+'</td><td>'+X.total.faults+'</td></tr><tr><td>평균 왕복</td><td>'+(avg?avg.toFixed(1)+' 초':'—')+'</td><td></td></tr><tr><td>최대 전류</td><td>'+(T.maxA?T.maxA.toFixed(2)+' A':'—')+'</td><td></td></tr><tr><td>전력량</td><td>'+T.energy.toFixed(3)+' Wh</td><td></td></tr>';
+ $('cy_tbl').innerHTML='<tr><th>시각</th><th>올림</th><th>내림</th><th>왕복</th><th>최대 전류</th><th>멈춘 이유</th></tr>'+(X.recent.length?X.recent.slice(0,20).map(r=>'<tr><td>'+r.t+'</td><td>'+r.up+'</td><td>'+r.down+'</td><td>'+r.tot+'</td><td>'+r.pk+' A</td><td>'+esc(WHY[r.why]||r.why||'—')+'</td></tr>').join(''):'<tr><td colspan="6" class="cap">아직 압축 기록이 없습니다. 압축이 끝날 때마다 여기에 쌓입니다.</td></tr>');}
 async function loadFiles(){if(!SRV.ok){$('fl_tbl').innerHTML='<tr><td class="cap">서버 없이 열려 있어 파일을 볼 수 없습니다. 「시작.bat」으로 여세요.</td></tr>';return;}
  let list=[];try{list=await (await fetch('/api/list',{cache:'no-store'})).json();}catch(e){}
  $('fl_tbl').innerHTML='<tr><th>파일</th><th>크기</th><th>바뀐 시각</th></tr>'+(list.length?list.slice(0,40).map(f=>'<tr><td><a href="/api/file?f='+encodeURIComponent(f.name)+'&dl=1">'+esc(f.name)+'</a></td><td>'+(f.size>1e6?(f.size/1e6).toFixed(1)+' MB':Math.ceil(f.size/1024)+' KB')+'</td><td>'+f.mtime+'</td></tr>').join(''):'<tr><td colspan="3" class="cap">아직 저장된 파일이 없습니다.</td></tr>');}
@@ -1846,7 +1856,7 @@ setInterval(()=>{if(DL.ok&&!S.simLog)DL.write('S\n');},30000);
 let lastF=0;
 function frame(now){requestAnimationFrame(frame);if(CAM.dark||now-lastF<32)return;const dt=Math.min(.1,(now-lastF)/1000);lastF=now;
  envDraw(now);rigStep();const mode=machineView();airView();
- const t=Date.now();if(MODE==='live'){CH.pm.draw(t);CH.amp.draw(t);CH.load.draw(t);CH.cr.draw(t);RIGS[0].draw(RIG.p,mode);}
+ const t=Date.now();if(MODE==='live'){CH.pm.draw(t);CH.amp.draw(t);CH.load.draw(t);RIGS[0].draw(RIG.p,mode);}
  else if(MODE==='present'){CH.cyc.draw(t);RIGS[1].draw(RIG.p,mode);}
  twStep();if(GL.on)GL.render(now,dt);}
 
