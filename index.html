@@ -817,7 +817,7 @@ const DEF={pin:'0000',title:'분진 비산 저감을 위한 모듈 적층식 압
  theme:'light',glass:true,lite:false,burnin:true,hideCursor:true,sound:true,
  attractMin:3,sceneSec:9,qr:true,autoLockMin:10,cam:true,camBlank:true,camMin:10,camSens:'mid',
  simCtrl:false,simLog:false,simAutoSec:70,autoDemo:false,autoDemoMin:10,record:true,
- vbus:12,fa:247,fb:-60.8,loadMode:'weight',panel2:'load',upEmpty:16,loadInv:true,rigUp:16,rigDown:14,guard:true,guardKg:18,
+ vbus:12,fa:247,fb:-60.8,loadMode:'force',panel2:'load',upEmpty:16,loadInv:true,rigUp:16,rigDown:14,guard:true,guardKg:18,
  aq25:[15,35,75],aq10:[30,80,150],refOn:true,refDelta:111,refLabel:'기존 방식 최고 (가상 실험)',
  winPm:300,winAmp:120,winLoad:60,
  results:[{v:'72',u:'%',t:'PM10 증가량 감소',s:'기존 방식 대비'},{v:'1.22',u:'배',t:'실효 압축비',s:''},{v:'43',u:'초',t:'압축 왕복 시간',s:''}],
@@ -825,7 +825,7 @@ const DEF={pin:'0000',title:'분진 비산 저감을 위한 모듈 적층식 압
 // 예전 기본 문구가 저장돼 있으면 새 기본값으로 바꿈 (직접 고친 문구는 그대로)
 const OLDTXT={sub:'v40 · 2026 캡스톤 디자인',refLabel:'기존 세단 방식 최고치 (가상 실험)',resultNote:'가상 실험값입니다 (실측 아님)'},
  OLDRES=[['세단할 때 PM10 최고 증가량 감소','기존 방식 대비'],['가득 채운 통의 실효 압축비','눌렀다 풀고 30초 뒤'],['압축 한 번 왕복 시간','올림, 유지, 내림']];
-function migTxt(o){if(!o.themeV2){o.theme='light';o.themeV2=1;}if(!o.pinV2){if(String(o.pin)==='4040')o.pin='0000';o.pinV2=1;}if(!o.loadV2){o.panel2='load';if(o.winLoad===300)o.winLoad=60;o.loadV2=1;}if(!o.camV2){o.cam=true;o.camV2=1;}for(const k in OLDTXT)if(o[k]===OLDTXT[k])o[k]=DEF[k];if(Array.isArray(o.results))o.results.forEach((r,i)=>{const d=OLDRES[i];if(r&&d){if(r.t===d[0])r.t=DEF.results[i].t;if(r.s===d[1])r.s=DEF.results[i].s;}});return o;}
+function migTxt(o){if(!o.themeV2){o.theme='light';o.themeV2=1;}if(!o.pinV2){if(String(o.pin)==='4040')o.pin='0000';o.pinV2=1;}if(!o.loadV2){o.panel2='load';if(o.winLoad===300)o.winLoad=60;o.loadV2=1;}if(!o.camV2){o.cam=true;o.camV2=1;}if(!o.loadV3){o.loadMode='force';o.loadV3=1;}for(const k in OLDTXT)if(o[k]===OLDTXT[k])o[k]=DEF[k];if(Array.isArray(o.results))o.results.forEach((r,i)=>{const d=OLDRES[i];if(r&&d){if(r.t===d[0])r.t=DEF.results[i].t;if(r.s===d[1])r.s=DEF.results[i].s;}});return o;}
 const clone=o=>JSON.parse(JSON.stringify(o));
 let S=clone(DEF);
 try{const j=JSON.parse(localStorage.getItem('v40ex_settings')||'{}');Object.assign(S,j);}catch(e){}
@@ -1045,11 +1045,11 @@ function cycleDone(o){const now=new Date();GL.glintT=performance.now();
 function logLine(l,src){
  if(src==='real'&&S.simLog)return;if(src==='sim'&&!S.simLog)return;
  const m=l.match(/^(\d+),(\d+),(\d+),(\d+),([-\d.]+|nan),(\d+)$/);
- if(m){const now=Date.now();Object.assign(L,{pm1:+m[2],pm25:+m[3],pm10:+m[4],w:m[5]==='nan'?null:(S.loadInv?-1:1)*m[5],wr:m[5]==='nan'?null:+m[5],mk:+m[6],last:now});
+ if(m){const now=Date.now();if(L.scale==null&&src==='real'&&now-(L.askT||0)>10000){L.askT=now;DL.write('S\n');}Object.assign(L,{pm1:+m[2],pm25:+m[3],pm10:+m[4],w:m[5]==='nan'?null:(S.loadInv?-1:1)*m[5]*loadK(),wr:m[5]==='nan'?null:+m[5],mk:+m[6],last:now});
   D.pm25.push(now,L.pm25);D.pm10.push(now,L.pm10);D.pm1.push(now,L.pm1);if(L.w!=null)D.load.push(now,L.w);
   if(CYC.on)CYC.pmMax=Math.max(CYC.pmMax,L.pm10);guard();return;}
  log('l',l);
- let k;if((k=l.match(/scale=([-\d.]+)/)))L.scale=+k[1];
+ let k;if((k=l.match(/scale=([-\d.]+)/))&&L.scale!==+k[1]){L.scale=+k[1];D.load.t.length=0;D.load.v.length=0;}
  if(/^# st /.test(l)){const o=kv(l.slice(5));L.sens='OLED '+(o.oled?'정상':'없음')+', 로드셀 '+(o.hx?'정상':'없음')+', 먼지 센서 '+(o.pms?'정상':'신호 없음');}
  if(/^# marker=/.test(l))evt('marker','로거 마커 '+l.split('=')[1]);
  if(/PMS 신호 없음/.test(l))evt('sensor','먼지 센서 신호 없음');
@@ -1064,6 +1064,10 @@ $('w_cal').onclick=()=>{const k=+$('w_known').value,w=L.wr;
  if(!confirm('로거 보정값을 '+L.scale+' → '+ns.toFixed(4)+' 로 저장할까요?\n지금 '+Math.round(w)+' g 로 읽히는 것을 '+k+' g 로 맞춥니다 (누르면 + 가 되게).'))return;
  lsend('K'+ns.toFixed(4));S.loadInv=false;saveSettings();fillInputs();D.load.t.length=0;D.load.v.length=0;
  evt('sensor','로드셀 보정값 '+L.scale+' → '+ns.toFixed(4)+' ('+k+' g 기준)');$('w_info').textContent='저장함: '+ns.toFixed(4)+' ('+hms(new Date())+')';setTimeout(()=>lsend('S'),800);};
+// 로거 보정값이 1 근처(보정 안 됨: 펌웨어가 로드셀 원시 값을 그대로 g 로 보냄)이면 20 kg 바 로드셀(1 mV/V) + HX711 의 대략값
+//  106 카운트 = 1 g 으로 나눠 보여 줌. 정확한 값은 [무게 보정] 을 한 번 하면 됨 (그 뒤엔 로거 보정값을 그대로 씀)
+const LOAD_NOM=106;
+function loadK(){return L.scale!=null&&Math.abs(L.scale)<2?L.scale/LOAD_NOM:1;}
 let guardT=0;
 function guard(){if(!S.guard||L.w==null)return;const kg=L.w/1000;if(kg>S.guardKg&&C.st>0&&C.st<7&&Date.now()-guardT>2000){guardT=Date.now();send('s');evt('guard','로드셀 '+kg.toFixed(1)+' kg → 기준 '+S.guardKg+' kg 초과, 정지 보냄');toast('로드셀 보호 정지','측정 무게가 '+S.guardKg+' kg를 넘어 압축을 멈췄습니다.','bad',8000);}}
 const PB={t:0,v:0};
@@ -1740,7 +1744,7 @@ function devPanel(){if($('admin').hidden)return;
  $('dv_ccfg').textContent=C.cfg?'완료 전류 '+C.cfg.full+' mA, 과전류 '+C.cfg.stall+' mA, 즉시 정지 '+C.cfg.hard+' mA, 끝 전류 '+C.cfg.end+' mA, 한 방향 최대 '+C.cfg.max+' s, 저각 '+C.cfg.low+' s, 유지 '+C.cfg.hold+' s, 재압축 금지 '+C.cfg.lock+' s, PWM '+C.cfg.pwm+', 하한 스위치 '+(C.cfg.lo?'씀':'안 씀')+', 상한 스위치 '+(C.cfg.hi?'씀':'안 씀')+', 방향 뒤집기 '+(C.cfg.rev?'켬':'끔'):'—';
  $('dv_l').innerHTML=S.simLog?'<span class="warnt">시뮬레이션 사용 중 (실제 장치 값은 무시)</span>':DL.ok?'<span class="okt">연결됨</span>'+(logFresh()?'':' <span class="warnt">· 측정 줄 없음</span>'):'연결 안 됨';
  $('dv_ls').textContent=L.sens||(logFresh()?(L.w==null?'로드셀 응답 없음':'로드셀 정상')+', '+(L.pm25===0&&L.pm10===0?'먼지 값 0 (센서 신호 확인)':'먼지 센서 정상'):'—');
- $('dv_lscale').textContent=L.scale!=null?'보정값 '+L.scale:'';
+ $('dv_lscale').textContent=L.scale!=null?'보정값 '+L.scale+(Math.abs(L.scale)<2?' (보정 안 됨 → 20 kg 로드셀 대략값으로 환산해서 보여 줌. 아래 무게 보정을 한 번 하면 정확해짐)':''):'';
  $('dv_srv').innerHTML=SRV.ok?'<span class="okt">연결됨</span> · 저장 폴더 '+esc(SRV.dir):'<span class="badt">서버 없음</span> · 「시작.bat」으로 열어야 기록과 설정이 파일로 남습니다';
  $('rec_dir').textContent=SRV.ok?'저장 폴더: '+SRV.dir:'';}
 function renderStats(){if($('admin').hidden)return;const X=SX(),T=X.today,avg=T.cycles?T.cycSum/T.cycles:null;
