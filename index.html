@@ -624,6 +624,7 @@ pre.log{font:13px/1.5 ui-monospace,Consolas,monospace;white-space:pre-wrap;word-
    </div></div>
    <div class="grp"><h4>실험 로거</h4><div class="card">
     <div class="btns"><button class="b" data-lcmd="T">무게 영점</button><button class="b ghost" data-lcmd="M">마커 +1</button><button class="b ghost" data-lcmd="S">센서 상태 확인</button></div>
+    <div class="row"><label for="w_known">무게 보정 (한 번만)<small>아무것도 안 올린 채 [무게 영점] → 아는 무게를 올려놓고 누름. 보정값이 로거에 저장돼 전원을 꺼도 남고, 누르면 + 로 나오게 방향도 같이 맞춥니다</small><small id="w_info"></small></label><input type="number" id="w_known" value="1000" min="10" step="10" style="width:90px" aria-label="아는 무게 (g)"><span class="cap">g</span><button class="b ghost" id="w_cal">보정값 계산 · 저장</button></div>
    </div></div>
    <div class="grp"><h4>자동 시연</h4><div class="card">
     <div class="row"><label for="s_autoDemo">정해진 간격마다 압축 한 번<small class="warnt">실제 장치가 사람 없이 움직입니다. 주변에 손이 닿지 않는지 확인하고 켜세요.</small></label><span class="sw"><input type="checkbox" id="s_autoDemo" data-s="autoDemo"><i></i></span></div>
@@ -685,7 +686,6 @@ pre.log{font:13px/1.5 ui-monospace,Consolas,monospace;white-space:pre-wrap;word-
    <div class="grp"><h4>로드셀</h4><div class="card">
     <div class="row"><label for="s_loadMode">누르는 힘 단위</label><select id="s_loadMode" data-s="loadMode"><option value="weight">kg</option><option value="force">N</option></select></div>
     <div class="row"><label for="s_loadInv">방향 뒤집기<small>누르면 값이 올라가야 맞습니다. 눌러도 0 에 붙어 안 움직이면 이걸 바꾸세요</small></label><span class="sw"><input type="checkbox" id="s_loadInv" data-s="loadInv"><i></i></span></div>
-    <div class="row"><label for="s_autoZero">자동 영점<small>압축부가 멈춰 있고 값이 10초 동안 그대로면(2 kg 넘으면 1분) 그 값을 0 으로 맞춥니다. 1분에 한 번까지</small><small id="az_st"></small></label><span class="sw"><input type="checkbox" id="s_autoZero" data-s="autoZero"><i></i></span></div>
     <div class="row"><label for="s_guard">로드셀 보호 정지<small>무게가 기준을 넘으면 압축부에 정지를 보냅니다 (움직이는 중에만)</small></label><span class="sw"><input type="checkbox" id="s_guard" data-s="guard"><i></i></span></div>
     <div class="row"><label for="s_guardKg">보호 기준 (kg)</label><input type="number" id="s_guardKg" data-s="guardKg" min="1" max="50"></div>
    </div></div>
@@ -817,7 +817,7 @@ const DEF={pin:'0000',title:'분진 비산 저감을 위한 모듈 적층식 압
  theme:'light',glass:true,lite:false,burnin:true,hideCursor:true,sound:true,
  attractMin:3,sceneSec:9,qr:true,autoLockMin:10,cam:true,camBlank:true,camMin:10,camSens:'mid',
  simCtrl:false,simLog:false,simAutoSec:70,autoDemo:false,autoDemoMin:10,record:true,
- vbus:12,fa:247,fb:-60.8,loadMode:'weight',panel2:'load',upEmpty:16,autoZero:true,loadInv:true,rigUp:16,rigDown:14,guard:true,guardKg:18,
+ vbus:12,fa:247,fb:-60.8,loadMode:'weight',panel2:'load',upEmpty:16,loadInv:true,rigUp:16,rigDown:14,guard:true,guardKg:18,
  aq25:[15,35,75],aq10:[30,80,150],refOn:true,refDelta:111,refLabel:'기존 방식 최고 (가상 실험)',
  winPm:300,winAmp:120,winLoad:60,
  results:[{v:'72',u:'%',t:'PM10 증가량 감소',s:'기존 방식 대비'},{v:'1.22',u:'배',t:'실효 압축비',s:''},{v:'43',u:'초',t:'압축 왕복 시간',s:''}],
@@ -1045,9 +1045,9 @@ function cycleDone(o){const now=new Date();GL.glintT=performance.now();
 function logLine(l,src){
  if(src==='real'&&S.simLog)return;if(src==='sim'&&!S.simLog)return;
  const m=l.match(/^(\d+),(\d+),(\d+),(\d+),([-\d.]+|nan),(\d+)$/);
- if(m){const now=Date.now();Object.assign(L,{pm1:+m[2],pm25:+m[3],pm10:+m[4],w:m[5]==='nan'?null:(S.loadInv?-1:1)*m[5],mk:+m[6],last:now});
+ if(m){const now=Date.now();Object.assign(L,{pm1:+m[2],pm25:+m[3],pm10:+m[4],w:m[5]==='nan'?null:(S.loadInv?-1:1)*m[5],wr:m[5]==='nan'?null:+m[5],mk:+m[6],last:now});
   D.pm25.push(now,L.pm25);D.pm10.push(now,L.pm10);D.pm1.push(now,L.pm1);if(L.w!=null)D.load.push(now,L.w);
-  if(CYC.on)CYC.pmMax=Math.max(CYC.pmMax,L.pm10);guard();autoZero(now);return;}
+  if(CYC.on)CYC.pmMax=Math.max(CYC.pmMax,L.pm10);guard();return;}
  log('l',l);
  let k;if((k=l.match(/scale=([-\d.]+)/)))L.scale=+k[1];
  if(/^# st /.test(l)){const o=kv(l.slice(5));L.sens='OLED '+(o.oled?'정상':'없음')+', 로드셀 '+(o.hx?'정상':'없음')+', 먼지 센서 '+(o.pms?'정상':'신호 없음');}
@@ -1055,17 +1055,15 @@ function logLine(l,src){
  if(/PMS 신호 없음/.test(l))evt('sensor','먼지 센서 신호 없음');
  if(/logger/.test(l))DL.id='log';
  devPanel();}
-// 로드셀 자동 영점: 압축부가 멈춰 있고 값이 한동안 그대로면 로거에 T(영점)를 보냄 (1분에 한 번까지)
-//  흔들림 = 창 안의 최대 − 최소가 30 g 와 평균의 2 % 중 큰 값 이하. 2 kg 이 넘게 그대로면 1분을 기다림 (누르고 있는 손과 구분)
-const AZ={last:0,n:0};
-function autoZero(now){if(!S.autoZero||L.w==null||now-AZ.last<60000)return;
- if(ctrlFresh()&&C.st>=1&&C.st<=6||now-lastCycleEnd<30000)return;
- const r=D.load,win=Math.abs(L.w)>2000?60000:10000;if(!r.t.length||now-r.t[0]<win)return;
- const i0=r.lb(now-win),a=r.v.slice(i0);if(a.length<win/1000||r.t[i0]-(now-win)>1500)return; // 창 전체에 값이 있어야 함 (끊겼다 다시 들어온 직후 제외)
- let mn=Infinity,mx=-Infinity,s=0;for(const v of a){if(v<mn)mn=v;if(v>mx)mx=v;s+=v;}const m=s/a.length;
- if(mx-mn>Math.max(30,Math.abs(m)*.02)||Math.abs(m)<15)return;
- AZ.last=now;AZ.n++;lsend('T');evt('zero','로드셀 자동 영점 ('+(m/1000).toFixed(2)+' kg → 0)');
- const st=$('az_st');if(st)st.textContent='마지막 자동 영점 '+hms(new Date())+' ('+(m/1000).toFixed(2)+' kg 를 0 으로)';}
+// 무게 보정: 지금 로거 값(g, 뒤집기 전) w 가 아는 무게 k 가 되도록 보정값 = 지금 보정값 × w ÷ k → 로거에 K 로 저장 (EEPROM)
+//  w 가 음수면 보정값 부호도 바뀌어서 로거가 + 를 보내게 됨 → 페이지의 '방향 뒤집기' 는 끔
+$('w_cal').onclick=()=>{const k=+$('w_known').value,w=L.wr;
+ if(!(k>0)||w==null||!L.scale||!logFresh()){alert('로거가 연결돼 값이 들어오고(보정값이 보일 때) 아는 무게를 올려놓은 뒤 누르세요.');return;}
+ if(Math.abs(w)<5){alert('지금 무게가 거의 0 입니다. 무게를 올려놓았는지 확인하세요.');return;}
+ const ns=L.scale*w/k;
+ if(!confirm('로거 보정값을 '+L.scale+' → '+ns.toFixed(4)+' 로 저장할까요?\n지금 '+Math.round(w)+' g 로 읽히는 것을 '+k+' g 로 맞춥니다 (누르면 + 가 되게).'))return;
+ lsend('K'+ns.toFixed(4));S.loadInv=false;saveSettings();fillInputs();D.load.t.length=0;D.load.v.length=0;
+ evt('sensor','로드셀 보정값 '+L.scale+' → '+ns.toFixed(4)+' ('+k+' g 기준)');$('w_info').textContent='저장함: '+ns.toFixed(4)+' ('+hms(new Date())+')';setTimeout(()=>lsend('S'),800);};
 let guardT=0;
 function guard(){if(!S.guard||L.w==null)return;const kg=L.w/1000;if(kg>S.guardKg&&C.st>0&&C.st<7&&Date.now()-guardT>2000){guardT=Date.now();send('s');evt('guard','로드셀 '+kg.toFixed(1)+' kg → 기준 '+S.guardKg+' kg 초과, 정지 보냄');toast('로드셀 보호 정지','측정 무게가 '+S.guardKg+' kg를 넘어 압축을 멈췄습니다.','bad',8000);}}
 const PB={t:0,v:0};
@@ -1075,7 +1073,7 @@ function pmBase(){const now=Date.now();if(now-PB.t<1000)return PB.v;const r=D.pm
 // ───────── 시뮬레이션 (실험실 페이지 연습 모드를 전시용으로 다듬은 것)
 const SIM={timer:null,n:0,
  c:{st:0,p:0,d:0,t0:0,tSt:0,pk:0,ma:0,sig:0,up:0,contact:.45,lastAuto:Date.now(),cfg:{full:1000,stall:3200,hard:4200,end:60,max:26,hold:2,lock:0,low:5,pwm:255,lo:1,hi:1,rev:1}},
- l:{pm25:6,w:420,tare:0,mk:0,shredUntil:0,nextShred:Date.now()+20000,drift:0,pressT:Date.now()+15000,pressD:0,pressKg:0},
+ l:{pm25:6,w:420,tare:0,mk:0,shredUntil:0,nextShred:Date.now()+20000,drift:0,pressT:Date.now()+15000,pressD:0,pressKg:0,scale:-21.437},
  out(l){ctrlLine(l,'sim');},lout(l){logLine(l,'sim');},
  cfgLine(){this.out('$C '+Object.entries(this.c.cfg).map(([k,v])=>k+'='+v).join(' '));},
  start(){if(this.timer)return;this.timer=setInterval(()=>this.tick(),100);},
@@ -1096,7 +1094,7 @@ const SIM={timer:null,n:0,
    else if(ch==='b')this.out('$T led=GYR buz=2');
    else if(ch==='z')this.out('$Z ok=1 mv=2507');
    else if(ch==='?'){this.out('=ID compactor 4 (시뮬레이션)');this.cfgLine();this.out('$Z ok=1 mv=2507');}}},
- lcmd(s){const l=this.l;if(s==='T'){l.tare=l.lastRaw||0;this.lout('# tare');}else if(s==='M'){l.mk++;this.lout('# marker='+l.mk);}else if(s==='S')this.lout('# st oled=1 disp=1 hx=1 pms=1 frames='+(this.n*5)+' scale=-21.4370 period=500');},
+ lcmd(s){const l=this.l;if(s[0]==='K'&&s.length>1){const v=+s.slice(1);if(v)l.scale=v;this.lout('# scale='+l.scale.toFixed(4));return;}if(s==='T'){l.tare=l.lastRaw||0;this.lout('# tare');}else if(s==='M'){l.mk++;this.lout('# marker='+l.mk);}else if(s==='S')this.lout('# st oled=1 disp=1 hx=1 pms=1 frames='+(this.n*5)+' scale='+this.l.scale.toFixed(4)+' period=500');},
  tick(){const now=Date.now();this.n++;
   if(S.simCtrl){const c=this.c,dt=.1;
    if(c.d){c.p=clamp(c.p+c.d*dt/(c.st===5?22:c.d>0?15:13),0,1);}
@@ -1120,7 +1118,7 @@ const SIM={timer:null,n:0,
    if(now>l.pressT+l.pressD){l.pressT=now+18000+Math.random()*25000;l.pressD=1500+Math.random()*3000;l.pressKg=3+Math.random()*12;}
    l.drift+=(Math.random()-.5)*4;const pt=(now-l.pressT)/l.pressD,press=pt>0&&pt<1?l.pressKg*1000*Math.sin(Math.PI*pt)*(.9+Math.random()*.2):0;
    const raw=l.w+l.drift+press;
-   l.lastRaw=raw;const w=-(raw-l.tare)+(Math.random()-.5)*3;
+   l.lastRaw=raw;const w=(raw-l.tare)*21.437/l.scale+(Math.random()-.5)*3;
    this.lout((now%1e7)+','+pm1+','+pm25+','+pm10+','+w.toFixed(1)+','+l.mk);}}
 };
 function applySim(k){const doC=!k||k==='simCtrl',doL=!k||k==='simLog';
