@@ -654,8 +654,9 @@ pre.log{font:13px/1.5 ui-monospace,Consolas,monospace;white-space:pre-wrap;word-
     <div class="row"><label for="s_sound">소리<small>압축이 끝나면 짧은 알림음, 안전 정지는 경고음</small></label><span class="sw"><input type="checkbox" id="s_sound" data-s="sound"><i></i></span></div>
     <div class="btns"><button class="b ghost" id="fs_btn">전체 화면</button><button class="b ghost" id="go_attract">소개 화면 바로 보기</button><button class="b ghost" id="reload_btn">페이지 새로 고침</button></div>
    </div></div>
-   <div class="grp"><h4>카메라로 화면 끄기 <small class="cap">(영상은 저장하거나 보내지 않고, 화면이 얼마나 바뀌었는지만 계산함)</small></h4><div class="card">
-    <div class="row"><label for="s_cam">쓰기<small>움직임이 없으면 화면을 검게 덮고, 사람이 움직이면 바로 다시 보여 줍니다. 처음 켤 때 카메라 허용을 한 번 눌러야 합니다</small><small class="warnt" id="cam_st"></small></label><span class="sw"><input type="checkbox" id="s_cam" data-s="cam"><i></i></span></div>
+   <div class="grp"><h4>카메라 (움직임 감지) <small class="cap">(영상은 저장하거나 보내지 않고, 화면이 얼마나 바뀌었는지만 계산함)</small></h4><div class="card">
+    <div class="row"><label for="s_cam">카메라 쓰기<small>사람이 움직이면 작품 소개 화면에서 바로 실시간 화면으로 바꾸고, 사람이 보이는 동안은 소개 화면으로 넘어가지 않습니다. 처음 켤 때 카메라 허용을 한 번 눌러야 합니다</small><small class="warnt" id="cam_st"></small></label><span class="sw"><input type="checkbox" id="s_cam" data-s="cam"><i></i></span></div>
+    <div class="row"><label for="s_camBlank">움직임이 없으면 화면 끄기<small>검게 덮었다가 사람이 움직이면 바로 다시 보여 줍니다</small></label><span class="sw"><input type="checkbox" id="s_camBlank" data-s="camBlank"><i></i></span></div>
     <div class="row"><label for="s_camMin">움직임이 없으면 끄기 (분)<small>압축하는 동안과 끝난 뒤 1분은 끄지 않습니다</small></label><input type="number" id="s_camMin" data-s="camMin" min="1" max="120"></div>
     <div class="row"><label for="s_camSens">민감도<small>사람이 와도 안 켜지면 높이고, 아무도 없는데 자꾸 켜지면 낮추세요</small></label><select id="s_camSens" data-s="camSens"><option value="low">낮음</option><option value="mid">보통</option><option value="high">높음</option></select></div>
     <div class="row cam"><canvas id="cam_cv" width="64" height="48"></canvas><span class="k">지금 움직임<small id="cam_lv">—</small></span></div>
@@ -683,6 +684,7 @@ pre.log{font:13px/1.5 ui-monospace,Consolas,monospace;white-space:pre-wrap;word-
    </div></div>
    <div class="grp"><h4>로드셀</h4><div class="card">
     <div class="row"><label for="s_loadMode">누르는 힘 단위</label><select id="s_loadMode" data-s="loadMode"><option value="weight">kg</option><option value="force">N</option></select></div>
+    <div class="row"><label for="s_loadInv">방향 뒤집기<small>누르면 값이 올라가야 맞습니다. 눌러도 0 에 붙어 안 움직이면 이걸 바꾸세요</small></label><span class="sw"><input type="checkbox" id="s_loadInv" data-s="loadInv"><i></i></span></div>
     <div class="row"><label for="s_autoZero">자동 영점<small>압축부가 멈춰 있고 값이 10초 동안 그대로면(2 kg 넘으면 1분) 그 값을 0 으로 맞춥니다. 1분에 한 번까지</small><small id="az_st"></small></label><span class="sw"><input type="checkbox" id="s_autoZero" data-s="autoZero"><i></i></span></div>
     <div class="row"><label for="s_guard">로드셀 보호 정지<small>무게가 기준을 넘으면 압축부에 정지를 보냅니다 (움직이는 중에만)</small></label><span class="sw"><input type="checkbox" id="s_guard" data-s="guard"><i></i></span></div>
     <div class="row"><label for="s_guardKg">보호 기준 (kg)</label><input type="number" id="s_guardKg" data-s="guardKg" min="1" max="50"></div>
@@ -813,9 +815,9 @@ const css=k=>{let v=CSSC.get(k);if(v===undefined){v=getComputedStyle(document.do
 // ───────── 설정
 const DEF={pin:'0000',title:'분진 비산 저감을 위한 모듈 적층식 압축 문서세단기',sub:'',
  theme:'light',glass:true,lite:false,burnin:true,hideCursor:true,sound:true,
- attractMin:3,sceneSec:9,qr:true,autoLockMin:10,cam:false,camMin:10,camSens:'mid',
+ attractMin:3,sceneSec:9,qr:true,autoLockMin:10,cam:true,camBlank:true,camMin:10,camSens:'mid',
  simCtrl:false,simLog:false,simAutoSec:70,autoDemo:false,autoDemoMin:10,record:true,
- vbus:12,fa:247,fb:-60.8,loadMode:'weight',panel2:'load',upEmpty:16,autoZero:true,rigUp:16,rigDown:14,guard:true,guardKg:18,
+ vbus:12,fa:247,fb:-60.8,loadMode:'weight',panel2:'load',upEmpty:16,autoZero:true,loadInv:true,rigUp:16,rigDown:14,guard:true,guardKg:18,
  aq25:[15,35,75],aq10:[30,80,150],refOn:true,refDelta:111,refLabel:'기존 방식 최고 (가상 실험)',
  winPm:300,winAmp:120,winLoad:60,
  results:[{v:'72',u:'%',t:'PM10 증가량 감소',s:'기존 방식 대비'},{v:'1.22',u:'배',t:'실효 압축비',s:''},{v:'43',u:'초',t:'압축 왕복 시간',s:''}],
@@ -823,7 +825,7 @@ const DEF={pin:'0000',title:'분진 비산 저감을 위한 모듈 적층식 압
 // 예전 기본 문구가 저장돼 있으면 새 기본값으로 바꿈 (직접 고친 문구는 그대로)
 const OLDTXT={sub:'v40 · 2026 캡스톤 디자인',refLabel:'기존 세단 방식 최고치 (가상 실험)',resultNote:'가상 실험값입니다 (실측 아님)'},
  OLDRES=[['세단할 때 PM10 최고 증가량 감소','기존 방식 대비'],['가득 채운 통의 실효 압축비','눌렀다 풀고 30초 뒤'],['압축 한 번 왕복 시간','올림, 유지, 내림']];
-function migTxt(o){if(!o.themeV2){o.theme='light';o.themeV2=1;}if(!o.pinV2){if(String(o.pin)==='4040')o.pin='0000';o.pinV2=1;}if(!o.loadV2){o.panel2='load';if(o.winLoad===300)o.winLoad=60;o.loadV2=1;}for(const k in OLDTXT)if(o[k]===OLDTXT[k])o[k]=DEF[k];if(Array.isArray(o.results))o.results.forEach((r,i)=>{const d=OLDRES[i];if(r&&d){if(r.t===d[0])r.t=DEF.results[i].t;if(r.s===d[1])r.s=DEF.results[i].s;}});return o;}
+function migTxt(o){if(!o.themeV2){o.theme='light';o.themeV2=1;}if(!o.pinV2){if(String(o.pin)==='4040')o.pin='0000';o.pinV2=1;}if(!o.loadV2){o.panel2='load';if(o.winLoad===300)o.winLoad=60;o.loadV2=1;}if(!o.camV2){o.cam=true;o.camV2=1;}for(const k in OLDTXT)if(o[k]===OLDTXT[k])o[k]=DEF[k];if(Array.isArray(o.results))o.results.forEach((r,i)=>{const d=OLDRES[i];if(r&&d){if(r.t===d[0])r.t=DEF.results[i].t;if(r.s===d[1])r.s=DEF.results[i].s;}});return o;}
 const clone=o=>JSON.parse(JSON.stringify(o));
 let S=clone(DEF);
 try{const j=JSON.parse(localStorage.getItem('v40ex_settings')||'{}');Object.assign(S,j);}catch(e){}
@@ -988,8 +990,8 @@ function lsend(s){if(S.simLog){SIM.lcmd(s);return;}if(!DL.ok){toast('로거가 �
 // ───────── 제어부 줄 처리
 function ctrlLine(l,src){
  if(src==='real'&&S.simCtrl)return;if(src==='sim'&&!S.simCtrl)return;
- const now=Date.now();C.last=now;
- if(l.startsWith('$S ')){const o=kv(l.slice(3)),prevS=C.lastS||0;Object.assign(C,{ma:o.ma,pk:o.pk,vcc:o.vcc,lo:o.lo,hi:o.hi,bt:o.bt,home:o.home,lk:o.lk,d:o.d,t:o.t,pwm:o.pwm});rigS(o,prevS,now);
+ const now=Date.now();if(src==='real'&&C.last&&now-C.last>3000)evt('device','제어부 신호가 '+((now-C.last)/1000).toFixed(1)+'초 끊겼다가 다시 들어옴');C.last=now;
+ if(l.startsWith('$S ')){const o=kv(l.slice(3)),prevS=C.lastS||0;if(o.st===0&&C.st===0&&C.home!=null&&o.home!==C.home)log('c','원점 표시 '+C.home+' → '+o.home);Object.assign(C,{ma:o.ma,pk:o.pk,vcc:o.vcc,lo:o.lo,hi:o.hi,bt:o.bt,home:o.home,lk:o.lk,d:o.d,t:o.t,pwm:o.pwm});rigS(o,prevS,now);
   if(o.st!==C.st)stChange(o.st);
   C.lastS=now;D.amp.push(now,o.ma/1000);D.st.push(now,o.st);
   if(CYC.on){CYC.ring.push(now-CYC.t0,o.ma/1000);CYC.pk=Math.max(CYC.pk,o.ma);
@@ -1043,7 +1045,7 @@ function cycleDone(o){const now=new Date();GL.glintT=performance.now();
 function logLine(l,src){
  if(src==='real'&&S.simLog)return;if(src==='sim'&&!S.simLog)return;
  const m=l.match(/^(\d+),(\d+),(\d+),(\d+),([-\d.]+|nan),(\d+)$/);
- if(m){const now=Date.now();Object.assign(L,{pm1:+m[2],pm25:+m[3],pm10:+m[4],w:m[5]==='nan'?null:+m[5],mk:+m[6],last:now});
+ if(m){const now=Date.now();Object.assign(L,{pm1:+m[2],pm25:+m[3],pm10:+m[4],w:m[5]==='nan'?null:(S.loadInv?-1:1)*m[5],mk:+m[6],last:now});
   D.pm25.push(now,L.pm25);D.pm10.push(now,L.pm10);D.pm1.push(now,L.pm1);if(L.w!=null)D.load.push(now,L.w);
   if(CYC.on)CYC.pmMax=Math.max(CYC.pmMax,L.pm10);guard();autoZero(now);return;}
  log('l',l);
@@ -1118,7 +1120,7 @@ const SIM={timer:null,n:0,
    if(now>l.pressT+l.pressD){l.pressT=now+18000+Math.random()*25000;l.pressD=1500+Math.random()*3000;l.pressKg=3+Math.random()*12;}
    l.drift+=(Math.random()-.5)*4;const pt=(now-l.pressT)/l.pressD,press=pt>0&&pt<1?l.pressKg*1000*Math.sin(Math.PI*pt)*(.9+Math.random()*.2):0;
    const raw=l.w+l.drift+press;
-   l.lastRaw=raw;const w=raw-l.tare+(Math.random()-.5)*3;
+   l.lastRaw=raw;const w=-(raw-l.tare)+(Math.random()-.5)*3;
    this.lout((now%1e7)+','+pm1+','+pm25+','+pm10+','+w.toFixed(1)+','+l.mk);}}
 };
 function applySim(k){const doC=!k||k==='simCtrl',doL=!k||k==='simLog';
@@ -1232,7 +1234,7 @@ class Bars{
   else this.tip.hidden=true;}
 }
 const winLab=s=>s>=60?(s%60?(s/60).toFixed(1)+'분':(s/60)+'분'):s+'초';
-const loadMap=()=>S.loadMode==='force'?(g=>g/1000*9.81):(g=>g/1000);
+const loadMap=()=>S.loadMode==='force'?(g=>Math.max(0,g)/1000*9.81):(g=>Math.max(0,g)/1000);
 const CH={};
 function makeCharts(){
  CH.pm=new Chart($('cv_pm'),{rlab:true,span:8,domain:n=>[n-S.winPm*1000,n],xlab:()=>['−'+winLab(S.winPm),'지금'],tipT:t=>hms(new Date(t)),unit:'µg/m³',
@@ -1592,13 +1594,17 @@ if(document.fonts)document.fonts.addEventListener('loadingdone',()=>{GL.gkey='';
 // ───────── 화면 갱신
 const SUB={};
 function ampScale(){let m=1;for(const r of SX().recent.slice(0,10))if(r&&r.pk>m)m=r.pk;if(CYC.on)m=Math.max(m,CYC.pk/1000);return m*1.1;}
-function machineView(){const fresh=ctrlFresh(),st=fresh?C.st:-1,now=Date.now();
+function machineView(){const now=Date.now(),fresh=ctrlFresh()||(C.st!=null&&now-C.last<8000&&(DC.ok||S.simCtrl)),st=fresh?C.st:-1; // 신호가 8초 안쪽으로 잠깐 끊기면 마지막 상태를 그대로 보여 줌
  let w,sub;
  if(!fresh){w=S.simCtrl?'시뮬레이션 준비 중':(DC.ok?'신호 기다리는 중':'연결 대기');sub='';}
- else{w=st===0?(C.home?'준비됨':'대기'):STW[st]||'—';sub=SUB[st]||'';
-  if(st===0)sub=C.lk>0?'다음 압축까지 '+C.lk+'초':(C.home?'앞면 버튼을 누르면 압축합니다':'');
+ else{w=st===0?'준비됨':STW[st]||'—';sub=SUB[st]||'';
+  if(st===0)sub=C.lk>0?'다음 압축까지 '+C.lk+'초':'앞면 버튼을 누르면 압축합니다';
   if(st===7)sub=WHY[C.faultWhy]||C.faultWhy||'원인을 확인하고 있습니다';}
- txt2('stateWord',w);txt2('stateSub',sub);
+ // 준비됨에서 신호 기다리는 중 · 연결 대기로 바뀌는 건 2초 동안 그대로여야 바꿈. 움직임 · 오류 · 준비됨은 바로
+ const quiet=x=>x==='준비됨'||x==='신호 기다리는 중'||x==='연결 대기'||x==='시뮬레이션 준비 중',MV=machineView;
+ if(w!==MV.want){MV.want=w;MV.wantT=now;}
+ if(MV.shown==null||w==='준비됨'||!quiet(w)||!quiet(MV.shown)||now-MV.wantT>2000)MV.shown=w; // 신호가 다시 들어와 준비됨이 되는 건 바로
+ txt2('stateWord',MV.shown);txt2('stateSub',MV.shown===w?sub:'');
  const run=fresh&&st>=1&&st<=6,fault=fresh&&st===7;
  $('machine').classList.toggle('run',run);$('machine').classList.toggle('fault',fault);
  num('amp',fresh?C.ma/1000:null,2);
@@ -1684,7 +1690,7 @@ document.addEventListener('change',e=>{const el=e.target;if(!el.dataset||!el.dat
 function applySettings(k){document.documentElement.dataset.theme=S.theme==='light'?'light':'dark';document.body.classList.toggle('lite',!!S.lite);CSSC.clear();ENV.sprite.clear();
  $('t_title').textContent=S.title;$('t_sub').textContent=S.sub;txt2('title',S.title);txt2('sub',S.sub);txt2('resultNote',S.resultNote);
  if(!k||k.startsWith('results'))renderResults();if(k==='simCtrl'||k==='simLog')applySim(k);
- if(k==='qr'&&MODE==='attract')showScene(0);
+ if(k==='qr'&&MODE==='attract')showScene(0);if(k==='loadInv'){D.load.t.length=0;D.load.v.length=0;}
  for(const w of $$('[data-win]'))w.textContent='최근 '+winLab(S[w.dataset.win]);
  if(!S.burnin)$('stage').style.transform='';$('rec_name').textContent=simPrefix()+'전시_'+ymd(new Date())+'.csv';chips();
  if(!k||k==='glass'||k==='lite'||k==='theme')GL.cfg();}
@@ -1771,6 +1777,7 @@ document.addEventListener('visibilitychange',keepAwake);
 const CAM={stream:null,v:null,cv:null,cx:null,px:null,prev:null,mask:null,busy:false,ok:false,st:'',lastErr:'',retryT:-1e12,retryMs:3e4,lastF:0,lastCT:-1,
  lastMotion:Date.now(),lastTick:Date.now(),lv:0,hits:0,blank:false,dark:false,darkT:0,testT:0,want:false,W:64,H:48,
  need(){return {low:.03,mid:.012,high:.005}[S.camSens]||.012;},
+ seen(){return S.cam&&this.ok?this.lastMotion:0;},
  mins(){return Math.max(1,+S.camMin||10);},
  last(){return Math.max(this.lastMotion,lastInteract,lastCycleEnd+60000);},
  async start(){if(this.busy||this.stream)return;
@@ -1787,7 +1794,7 @@ const CAM={stream:null,v:null,cv:null,cx:null,px:null,prev:null,mask:null,busy:f
  stop(){if(this.stream)for(const t of this.stream.getTracks())t.stop();this.stream=null;this.ok=false;if(this.v)this.v.srcObject=null;this.prev=null;this.lv=0;},
  fail(m,ms){this.stop();this.st=m;this.retryMs=ms||3e4;this.retryT=Date.now();if(m!==this.lastErr){this.lastErr=m;evt('cam','카메라 안 됨: '+m);}},
  sleep(why){if(this.blank)return;this.blank=true;const b=$('blank');b.hidden=false;void b.offsetWidth;b.classList.add('on');clearTimeout(this.darkT);this.darkT=setTimeout(()=>{if(this.blank)this.dark=true;},1800);evt('screen','화면 끔: '+why);},
- wake(why){if(!this.blank)return;this.blank=false;this.dark=false;this.testT=0;clearTimeout(this.darkT);const b=$('blank');b.classList.remove('on');setTimeout(()=>{if(!this.blank)b.hidden=true;},450);evt('screen','화면 켬: '+why);},
+ wake(why){if(!this.blank)return;this.blank=false;this.dark=false;this.testT=0;clearTimeout(this.darkT);const b=$('blank');b.classList.remove('on');setTimeout(()=>{if(!this.blank)b.hidden=true;},450);evt('screen','화면 켬: '+why);if((why==='움직임'||why==='마우스 · 키보드')&&MODE==='attract')setMode('live');},
  diff(){const v=this.v,W=this.W,H=this.H,N=W*H;
   if(!this.cx){this.cv=document.createElement('canvas');this.cv.width=W;this.cv.height=H;this.cx=this.cv.getContext('2d',{willReadFrequently:true});this.cx.imageSmoothingQuality='high';this.mask=new Uint8Array(N);}
   this.cx.drawImage(v,0,0,W,H);const d=this.cx.getImageData(0,0,W,H).data,g=new Uint8Array(N);
@@ -1801,7 +1808,7 @@ const CAM={stream:null,v:null,cv:null,cx:null,px:null,prev:null,mask:null,busy:f
  ui(now){if($('admin').hidden||adminTab!=='show')return;
   $('cam_st').textContent=S.cam&&!this.ok?this.st:'';
   const sec=ms=>{const s=Math.round(ms/1000);return s<60?s+'초':Math.floor(s/60)+'분 '+(s%60)+'초';};
-  $('cam_lv').textContent=!S.cam?'꺼짐':!this.ok?'—':(this.lv*100).toFixed(1)+' % (켜지는 기준 '+(this.need()*100).toFixed(1)+' %) · 마지막 움직임 '+sec(now-this.lastMotion)+' 전 · 끄기까지 '+sec(Math.max(0,this.mins()*60000-(now-this.last())));
+  $('cam_lv').textContent=!S.cam?'꺼짐':!this.ok?'—':(this.lv*100).toFixed(1)+' % (켜지는 기준 '+(this.need()*100).toFixed(1)+' %) · 마지막 움직임 '+sec(now-this.lastMotion)+' 전'+(S.camBlank?' · 끄기까지 '+sec(Math.max(0,this.mins()*60000-(now-this.last()))):'');
   if(this.ok)this.preview();},
  tick(){const now=Date.now(),gap=now-this.lastTick;this.lastTick=now;
   if(gap>20000){this.lastMotion=now;if(this.blank)this.wake('절전에서 깨어남');if(this.stream){this.stop();this.retryT=-1e12;}} // 절전 뒤에는 카메라를 새로 엶
@@ -1813,11 +1820,11 @@ const CAM={stream:null,v:null,cv:null,cx:null,px:null,prev:null,mask:null,busy:f
   if(tr.muted){if(!this.mutedT)this.mutedT=now;}else this.mutedT=0;
   if(this.mutedT&&now-this.mutedT>8000){this.mutedT=0;this.fail('카메라 영상이 들어오지 않습니다',3e4);if(this.blank)this.wake('카메라 안 됨');this.ui(now);return;}
   if(v.readyState>=2&&v.videoWidth&&v.currentTime!==this.lastCT){this.lastCT=v.currentTime;this.lastF=now;
-   const fr=this.diff();this.lv=fr;if(fr>this.need()){if(++this.hits>=2)this.lastMotion=now;}else this.hits=0;}
+   const fr=this.diff();this.lv=fr;if(fr>this.need()){if(++this.hits>=2){this.lastMotion=now;if(MODE==='attract'&&!this.blank)setMode('live');}}else this.hits=0;}
   if(now-this.lastF>8000){this.fail('카메라 영상이 멈췄습니다',3e4);if(this.blank)this.wake('카메라 안 됨');this.ui(now);return;}
   const run=C.st>=1&&C.st<=6;
   if(this.blank){if(run)this.wake('압축 시작');else if(now>this.testT&&now-lastInteract<1500)this.wake('마우스 · 키보드');else if(now>this.testT&&now-this.lastMotion<1500)this.wake('움직임');}
-  else if(!run&&now-this.last()>this.mins()*60000&&$('admin').hidden&&$('pin').hidden)this.sleep('움직임 없음 '+this.mins()+'분');
+  else if(S.camBlank&&!run&&now-this.last()>this.mins()*60000&&$('admin').hidden&&$('pin').hidden)this.sleep('움직임 없음 '+this.mins()+'분');
   this.ui(now);}};
 setInterval(()=>CAM.tick(),250);
 $('cam_test').onclick=()=>{if(!S.cam||!CAM.ok){toast('카메라가 켜져 있지 않습니다','[쓰기] 를 켜고 아래에 영상이 보이면 다시 누르세요.','bad',4000);return;}
@@ -1831,7 +1838,7 @@ setInterval(()=>{const now=Date.now(),d=new Date(now);
  if(SIMST.today.day!==ymd(d))SIMST.today=ST0();
  statsView();chips();
  // 작품 소개 화면으로 넘어가기
- if(MODE==='live'&&S.attractMin>0&&now-lastInteract>S.attractMin*60000&&!(C.st>=1&&C.st<=6)&&now-lastCycleEnd>60000&&$('admin').hidden&&$('pin').hidden)setMode('attract');
+ if(MODE==='live'&&S.attractMin>0&&now-Math.max(lastInteract,CAM.seen())>S.attractMin*60000&&!(C.st>=1&&C.st<=6)&&now-lastCycleEnd>60000&&$('admin').hidden&&$('pin').hidden)setMode('attract');
  if(MODE==='attract'&&now-sceneT>S.sceneSec*1000){sceneT=now;showScene(sceneI+1);}
  // 자동 잠금
  if(OP.on&&now-lastInteract>S.autoLockMin*60000)lock();
